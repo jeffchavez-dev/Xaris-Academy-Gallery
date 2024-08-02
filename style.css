@@ -19,8 +19,13 @@ html {
 body {
     background: url(/assets/Xaris\ Background.png);
     background-color: var(--background);
+    font-family: cursive;
 }
+h2 {
+    font-size: 3em;
+    font: lucida handwriting;
 
+}
 .header {
     display: flex;
     flex-direction: row;
@@ -61,6 +66,12 @@ main, .gallery {
     gap: 2em;
     flex-wrap: wrap;
 }
+
+.core-values {
+    display: flex;
+    flex-direction: row;
+
+}
 .values {
     display: flex;
     flex-direction: row;
@@ -76,12 +87,14 @@ main, .gallery {
     width: 80%;
     max-width: 500px;
     background-color: var(--accent);
-    font-size: 1.5em;
-    margin-bottom: 10px;
-
+    
     padding: 10px;
     border-radius: 10px;
     color: var(--background);
+    font-size: 1.5em;
+    margin-bottom: 10px;
+
+    opacity: .9;
 }
 
 .main-text > div {
@@ -113,7 +126,7 @@ img {
 
 
 
-.mira-picture-img, .kesed-picture-img {
+.mira-picture-img {
     width: 80%;
     border-radius: 10px;
 }
