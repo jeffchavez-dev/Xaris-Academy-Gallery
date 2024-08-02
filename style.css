@@ -13,6 +13,7 @@
 }
 
 body {
+    background: url(/assets/Xaris\ Background.png);
     background-color: var(--background);
 }
 
@@ -22,6 +23,7 @@ body {
     justify-content: space-around;
     align-items: center;
     padding: 1em;
+    background-color: var(--background);
 }
 
 .nav > .links {
