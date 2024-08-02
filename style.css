@@ -59,7 +59,7 @@ section {
     height: 100%;
     width: 100%;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-around;
     align-items: center;
     border: 2px solid var(--accent);
@@ -76,7 +76,8 @@ button {
 }
 
 button:hover {
-
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 button > a {
