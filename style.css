@@ -58,15 +58,18 @@ img {
 }
 section {
     height: 100%;
-    width: 250px;
-    max-width: 80%;
+    width: 100vh;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: center; 
+    flex-wrap: wrap;
     border: 8px solid var(--accent);
 }
-
+.kids {
+    border: 8px solid var(--accent);
+    width: 400px;
+}
 
 button {
     padding: 10px;
