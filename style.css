@@ -55,9 +55,8 @@ main, .gallery {
     width: 50%;
     border-radius: 100%;
 }
-section {
+section, .kids {
     height: 100%;
-    width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
