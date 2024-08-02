@@ -44,6 +44,7 @@ main, .gallery {
     justify-content: space-around;
     align-items: center;
     height: 90vh;
+    gap: 2em;
 }
 
 .main-text {
@@ -51,12 +52,21 @@ main, .gallery {
     flex-direction: row;
     text-align: center;
     justify-content: space-around;
+    height: 90vh;
     gap: 2em;
     flex-wrap: wrap;
 }
 
 .main-text > div {
     width: 300px;
+}
+
+.mission > h2, .vision > h2 {
+    font-size: 3em;
+}
+
+.mission > p, .vision > p {
+    font-size: 1.5em;
 }
 .family-picture, .mira-picture, .kesed-picture {
     max-width: 100vh;
