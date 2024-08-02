@@ -71,6 +71,8 @@ main, .gallery {
     gap: 2em;
 }
 .values > p {
+    align-items: center;
+    height: 250px;
     width: 80%;
     max-width: 500px;
     background-color: var(--accent);
