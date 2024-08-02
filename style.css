@@ -61,12 +61,24 @@ main, .gallery {
     gap: 2em;
     flex-wrap: wrap;
 }
-
-.core-values > p {
+.values {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 2em;
+}
+.values > p {
     width: 80%;
+    max-width: 500px;
     background-color: var(--accent);
-    opacity: .8;
     font-size: 1.5em;
+    margin-bottom: 10px;
+
+    padding: 10px;
+    border-radius: 10px;
+    color: var(--background);
 }
 
 .main-text > div {
