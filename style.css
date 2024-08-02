@@ -52,7 +52,7 @@ main, .gallery {
     flex-direction: row;
 }
 
-.main-text {
+.main-text, .core-values {
     display: flex;
     flex-direction: row;
     text-align: center;
@@ -60,6 +60,13 @@ main, .gallery {
     height: 90vh;
     gap: 2em;
     flex-wrap: wrap;
+}
+
+.core-values > p {
+    width: 80%;
+    background-color: var(--accent);
+    opacity: .8;
+    font-size: 1.5em;
 }
 
 .main-text > div {
