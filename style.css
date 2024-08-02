@@ -47,6 +47,11 @@ main, .gallery {
     gap: 2em;
 }
 
+.cols {
+    display: flex;
+    flex-direction: row;
+}
+
 .main-text {
     display: flex;
     flex-direction: row;
@@ -83,6 +88,8 @@ img {
     border-radius: 100%;
     border: 8px solid var(--accent);
 }
+
+
 
 .mira-picture-img, .kesed-picture-img {
     width: 80%;
