@@ -12,6 +12,10 @@
     --accent: #9d6a47; 
 }
 
+
+html {
+    scroll-behavior: smooth;
+}
 body {
     background: url(/assets/Xaris\ Background.png);
     background-color: var(--background);
@@ -42,6 +46,18 @@ main, .gallery {
     height: 90vh;
 }
 
+.main-text {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    justify-content: space-around;
+    gap: 2em;
+    flex-wrap: wrap;
+}
+
+.main-text > div {
+    width: 300px;
+}
 .family-picture, .mira-picture, .kesed-picture {
     max-width: 100vh;
     display: flex;

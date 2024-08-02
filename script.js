@@ -1,13 +1,17 @@
-import lightGallery from 'lightgallery';
-
-// Plugins
-import lgThumbnail from 'lightgallery/plugins/thumbnail'
-import lgZoom from 'lightgallery/plugins/zoom'
-
-
-lightGallery(document.getElementById('lightgallery'), {
-    plugins: [lgZoom, lgThumbnail],
-    licenseKey: 'your_license_key',
-    speed: 500,
-    // ... other settings
-});
+function reveal() {
+    var reveals = document.querySelectorAll(".reveal");
+  
+    for (var i = 0; i < reveals.length; i++) {
+      var windowHeight = window.innerHeight;
+      var elementTop = reveals[i].getBoundingClientRect().top;
+      var elementVisible = 150;
+  
+      if (elementTop < windowHeight - elementVisible) {
+        reveals[i].classList.add("active");
+      } else {
+        reveals[i].classList.remove("active");
+      }
+    }
+  }
+  
+  window.addEventListener("scroll", reveal, {passive: true});
