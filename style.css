@@ -65,15 +65,18 @@ main, .gallery {
     height: 90vh;
     gap: 2em;
     flex-wrap: wrap;
+    margin-bottom: 2em;
 }
 
 .core-values {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     text-align: center;
     justify-content: space-around;
 
 }
+
+
 .values {
     display: flex;
     flex-direction: row;
@@ -133,13 +136,7 @@ img {
     border-radius: 10px;
 }
 
-section {
-    height: 50vh;
-    display: flex;
-    flex: 1 0 auto;
-    flex-wrap: wrap;
 
-}
 .kids {
     width: 500px;
     max-width: 80%;
