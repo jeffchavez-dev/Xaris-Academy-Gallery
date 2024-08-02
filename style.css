@@ -51,7 +51,7 @@ main, .gallery {
     gap: 1em;
 }
 
-.family-picture-img {
+img {
     width: 50%;
     border-radius: 100%;
 }
