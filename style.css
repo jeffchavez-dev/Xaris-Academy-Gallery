@@ -51,24 +51,28 @@ main, .gallery {
     gap: 1em;
 }
 
+
 img {
     width: 50%;
     border-radius: 100%;
     border: 8px solid var(--accent);
 }
+
+.mira-picture-img, .kesed-picture-img {
+    width: 80%;
+    border-radius: 10px;
+}
+
 section {
-    height: 100%;
-    width: 100vh;
+    height: 50vh;
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center; 
+    flex: 1 0 auto;
     flex-wrap: wrap;
-    border: 8px solid var(--accent);
+
 }
 .kids {
-    border: 8px solid var(--accent);
-    width: 400px;
+    width: 500px;
+    max-width: 80%;
 }
 
 button {
