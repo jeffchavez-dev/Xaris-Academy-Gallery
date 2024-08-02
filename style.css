@@ -6,6 +6,16 @@
     margin: 0;
 }
 
+:root {
+    --background: #ffedd4; 
+    --primary: #000001; 
+    --accent: #9d6a47; 
+}
+
+body {
+    background-color: var(--background);
+}
+
 .header {
     display: flex;
     flex-direction: row;
@@ -14,14 +24,20 @@
     padding: 1em;
 }
 
+.nav > .links {
+    color: var(--primary);
+    text-decoration: none;
+    
+}
+
 
 main {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    height: 80vh;
-    border: 2px solid red;
+    height: 90vh;
+    border: 2px solid var(--accent);
 }
 
 section {
@@ -32,6 +48,10 @@ section {
     justify-content: space-around;
     align-items: center;
     align-items: center;
-    border: 2px solid red;
+    border: 2px solid var(--accent);
     
+}
+
+button {
+
 }
