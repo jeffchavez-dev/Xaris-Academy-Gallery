@@ -45,9 +45,10 @@ main, .gallery {
 .family-picture {
     width: 100vh;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-around;
     align-items: center;
+    gap: 1em;
 }
 
 .family-picture-img {
@@ -61,11 +62,24 @@ section {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    align-items: center;
     border: 2px solid var(--accent);
     
 }
 
 button {
+    padding: 10px;
+    background-color: var(--background);
+    border-radius: 5px;
+    border: solid 1px var(--accent);
+    font-size: 1.5em;
+    opacity: .8;
+}
 
+button:hover {
+
+}
+
+button > a {
+    color: var(--primary);
+    text-decoration: none;
 }
