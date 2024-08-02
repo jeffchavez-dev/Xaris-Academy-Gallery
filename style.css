@@ -22,7 +22,7 @@ body {
     font-family: cursive;
 }
 h2 {
-    font-size: 3em;
+    font-size: 4em;
     font: lucida handwriting;
 
 }
@@ -50,6 +50,7 @@ main, .gallery {
     align-items: center;
     height: 90vh;
     gap: 2em;
+    flex-wrap: wrap;
 }
 
 .cols {
@@ -76,6 +77,10 @@ main, .gallery {
 
 }
 
+.core-values > h2 {
+    margin: 1em;
+}
+
 
 .values {
     display: flex;
@@ -99,7 +104,7 @@ main, .gallery {
     font-size: 1.5em;
     margin-bottom: 10px;
 
-    opacity: .9;
+    opacity: .7;
 }
 
 @media (max-width: 500px) {
