@@ -31,7 +31,7 @@ body {
 }
 
 
-main {
+main, .gallery {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -40,6 +40,10 @@ main {
     border: 2px solid var(--accent);
 }
 
+.family-picture-img {
+    width: 80%;
+    border-radius: 100%;
+}
 section {
     height: 100%;
     width: 100%;
