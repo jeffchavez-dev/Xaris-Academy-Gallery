@@ -40,8 +40,16 @@ main, .gallery {
     border: 2px solid var(--accent);
 }
 
+.family-picture {
+    width: 100vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
 .family-picture-img {
-    width: 80%;
+    width: 50%;
     border-radius: 100%;
 }
 section {
