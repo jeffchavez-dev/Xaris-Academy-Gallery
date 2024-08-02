@@ -57,7 +57,7 @@ main, .gallery {
     flex-direction: row;
 }
 
-.main-text, .core-values {
+.main-text {
     display: flex;
     flex-direction: row;
     text-align: center;
@@ -70,6 +70,8 @@ main, .gallery {
 .core-values {
     display: flex;
     flex-direction: row;
+    text-align: center;
+    justify-content: space-around;
 
 }
 .values {
@@ -108,7 +110,7 @@ main, .gallery {
 .mission > p, .vision > p {
     font-size: 1.5em;
 }
-.family-picture, .mira-picture, .kesed-picture {
+.family-picture, .mira-picture {
     max-width: 100vh;
     display: flex;
     flex-direction: column;
