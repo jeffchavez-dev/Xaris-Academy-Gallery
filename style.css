@@ -54,6 +54,7 @@ main, .gallery {
 img {
     width: 50%;
     border-radius: 100%;
+    border: 8px solid var(--accent);
 }
 section, .kids {
     height: 100%;
