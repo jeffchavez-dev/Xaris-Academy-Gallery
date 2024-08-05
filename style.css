@@ -45,7 +45,6 @@ h2 {
     
 }
 
-
 main, .gallery {
     display: flex;
     flex-direction: row;
