@@ -71,6 +71,10 @@ main, .gallery {
     margin-bottom: 2em;
 }
 
+.main-btns {
+    display: flex;
+    gap: 2em;
+}
 .core-values {
     display: flex;
     flex-direction: column;
