@@ -199,5 +199,6 @@ button > a:hover {
 
 footer {
     text-align: center;
-    margin: 1em auto
+    margin: 1em auto;
+    font-size: 1.1em;
 }
