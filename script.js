@@ -18,48 +18,45 @@ function reveal() {
 
 const images = document.querySelector(".gallery_images")
 
-images.addEventListener('click', () => {
-  alert('Clicked')
-    const modal = document.createElement("div")
-    const modalImage = document.createElement("img");
-    modalImage.src = images.img.src;
-    modalImage.style.cursor = "pointer"
-    modal.appendChild(modalImage)
-})
+// images.addEventListener('click', () => {
+//   alert('Clicked')
+//     const modal = document.createElement("div")
+//     const modalImage = document.createElement("img");
+//     modalImage.src = images.img.src;
+//     modalImage.style.cursor = "pointer"
+//     modal.appendChild(modalImage)
+// })
 
+const galleryImages = document.querySelectorAll(".gallery_images img");
 
-
-imageContainerGirl.forEach(image => {
-    console.log("Girl")
-    const galleryImages = document.createElement("img");
-    galleryImages.src = image.image;
-    galleryImages.style.cursor = "pointer"
-    imageContainerGirl.appendChild(galleryImages)
-
-    const modal = document.createElement("div")
-    const modalImage = document.createElement("img");
-    modalImage.src = image.image;
-    modalImage.style.cursor = "pointer"
-    modal.appendChild(modalImage)
+galleryImages.forEach(image => {
+  image.addEventListener('click', (event) => {
+    image.addEventListener('click', (event) => {
+      // 1. Create modal elements
+      const modal = document.createElement("div");
+      modal.classList.add("modal"); // Add a class for styling
+      const modalImage = document.createElement("img");
+      modalImage.src = event.target.src; // Get source from clicked image
+      modalImage.style.cursor = "pointer";
+      const closeButton = document.createElement("button");
+      closeButton.textContent = "Close";
+      closeButton.classList.add("close-button"); // Add a class for styling
     
+      // 2. Append elements to modal
+      modal.appendChild(modalImage);
+      modal.appendChild(closeButton);
     
-    const close = document.createElement("span")
-    close.classList.add("close")
-    close.innerText = "X"
-    modal.appendChild(close)
+      // 3. Display the modal (append to body)
+      document.body.appendChild(modal);
+    
+      // 4. Close modal functionality (optional)
+      closeButton.addEventListener('click', () => {
+        document.body.removeChild(modal);
 
-    imageContainerGirl.addEventListener('click', () => {
-        close.style.display = "block"
-        modal.classList.add("modal")
-        modal.style.display = "flex"
-        modalImage.classList.add("modal_image")
-        imageContainerGirl.appendChild(modal)
 
-        close.addEventListener('click', () => {
-            // modal.style.display = "none";
-            modal.classList.remove("modal")
-            modal.style.display = "none"
-            close.style.display = "none"
-        })
-    })
-})
+      
+      });
+    });
+  });
+});
+
