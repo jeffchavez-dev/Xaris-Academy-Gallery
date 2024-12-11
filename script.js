@@ -27,17 +27,19 @@ const images = document.querySelector(".gallery_images")
 //     modal.appendChild(modalImage)
 // })
 
-const galleryImages = document.querySelectorAll(".gallery_images img");
+const galleryImages = document.querySelectorAll(".gallery_images");
 
 galleryImages.forEach(image => {
-  image.addEventListener('click', (event) => {
     image.addEventListener('click', (event) => {
       // 1. Create modal elements
+      console.log("Clicked")
       const modal = document.createElement("div");
       modal.classList.add("modal"); // Add a class for styling
       const modalImage = document.createElement("img");
+      modalImage.classList.add("modal_image")
       modalImage.src = event.target.src; // Get source from clicked image
       modalImage.style.cursor = "pointer";
+      modal.classList.add('show');
       const closeButton = document.createElement("button");
       closeButton.textContent = "Close";
       closeButton.classList.add("close-button"); // Add a class for styling
@@ -52,11 +54,12 @@ galleryImages.forEach(image => {
       // 4. Close modal functionality (optional)
       closeButton.addEventListener('click', () => {
         document.body.removeChild(modal);
+        modal.classList.remove('show');
 
 
       
       });
     });
   });
-});
+
 
