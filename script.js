@@ -55,10 +55,17 @@ galleryImages.forEach(image => {
       closeButton.addEventListener('click', () => {
         document.body.removeChild(modal);
         modal.classList.remove('show');
+      });
 
+
+      document.body.addEventListener('click', (event) => {
+        if (event.target !== image && !event.target.closest('.modal')) {
+          document.body.removeChild(modal);
+          document.body.removeEventListener('click', this); // Remove the event listener
+        }
+      });
 
       
-      });
     });
   });
 
