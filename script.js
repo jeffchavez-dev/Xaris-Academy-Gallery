@@ -22,7 +22,7 @@ images.addEventListener('click', () => {
   alert('Clicked')
     const modal = document.createElement("div")
     const modalImage = document.createElement("img");
-    modalImage.src = images.img;
+    modalImage.src = images.img.src;
     modalImage.style.cursor = "pointer"
     modal.appendChild(modalImage)
 })
