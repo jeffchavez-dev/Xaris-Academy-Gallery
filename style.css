@@ -140,7 +140,7 @@ main, .gallery {
 }
 
 
-img {
+.family-picture-img {
     width: 50%;
     border-radius: 100%;
     border: 8px solid var(--accent);
@@ -151,6 +151,21 @@ img {
 .mira-picture-img {
     width: 80%;
     border-radius: 10px;
+}
+
+.img_gallery {
+    margin: 1em;
+    display: flex ;
+    gap: 1.5em;
+    flex-wrap: wrap;
+    max-width: 90%;
+    justify-content: center;
+}
+.img_gallery > .gallery_images {
+    width: 40%;
+    border-radius: 5px;
+    /* border: 5px solid var(--accent); */
+    box-shadow: 5px 5px 10px #9d6a47;
 }
 
 
