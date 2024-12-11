@@ -161,9 +161,10 @@ main, .gallery {
     align-items: center;
     width: 1500px;
     max-width: 90%;
+    border: red solid 1px;
 }
 .img_gallery {
-    margin: 1em;
+    margin: auto;
     display: flex ;
     gap: 1.5em;
     flex-wrap: wrap;
@@ -172,14 +173,18 @@ main, .gallery {
     align-items: center;
 }
 .img_gallery > .gallery_images {
-    max-width: 500px;
-    max-height: 500px;
+    width: 500px;
+    max-width: 40%;
+    /* max-height: 500px; */
     border-radius: 5px;
     /* border: 5px solid var(--accent); */
     box-shadow: 5px 5px 10px #9d6a47;
     cursor: pointer;
+    margin: auto;
 }
 .img_gallery > p {
+    max-width: 500px;
+    max-height: 500px;
     font-size: 2em;
     font-style: italic;
     text-shadow: 5px 5px 10px var(--accent);
@@ -288,4 +293,8 @@ footer {
     text-align: center;
     margin: 1em auto;
     font-size: 1.1em;
+}
+
+@media (max-width: 600px) {
+
 }
