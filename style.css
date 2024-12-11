@@ -159,22 +159,25 @@ main, .gallery {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 1500px;
+    max-width: 90%;
 }
 .img_gallery {
     margin: 1em;
     display: flex ;
     gap: 1.5em;
     flex-wrap: wrap;
-    width: 1080px;
-    max-width: 90%;
+    
     justify-content: center;
     align-items: center;
 }
 .img_gallery > .gallery_images {
-    width: 250px;
+    max-width: 500px;
+    max-height: 500px;
     border-radius: 5px;
     /* border: 5px solid var(--accent); */
     box-shadow: 5px 5px 10px #9d6a47;
+    cursor: pointer;
 }
 
 
