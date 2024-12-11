@@ -161,7 +161,7 @@ main, .gallery {
     align-items: center;
     width: 1500px;
     max-width: 90%;
-    border: red solid 1px;
+    /* border: red solid 1px; */
 }
 .img_gallery {
     margin: auto;
