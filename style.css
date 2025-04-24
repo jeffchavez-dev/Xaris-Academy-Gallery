@@ -314,3 +314,15 @@ footer {
     margin: 1em auto;
     font-size: 1.1em;
 }
+
+.back-btn {
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    background-color: var(--background);
+    border-radius: 5px;
+    border: solid 1px var(--accent);
+    font-size: 1.5em;
+    opacity: .8;
+    padding: 10px;
+}
