@@ -18,7 +18,6 @@ html {
 }
 body {
     z-index: 2;
-    font-family: cursive;
 }
 
 .background {
@@ -233,8 +232,8 @@ p {
 
 @media (max-width: 600px) {
     .img_gallery > .gallery_images {
-        width: 150px;
-        max-width: 50%;
+        width: 250px;
+        max-width: 90%;
     }
 }
 
@@ -382,7 +381,8 @@ footer {
     z-index: 10;
     display: flex;
     background-color: var(--background);
-    border-bottom: 1px solid var(--accent)
+    border-bottom: 1px solid var(--accent);
+    font-size: .5em;
 }
 .collapsible.active h2  {
     color: black
