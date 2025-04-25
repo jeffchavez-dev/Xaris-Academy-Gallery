@@ -60,7 +60,7 @@ galleryImages.forEach(image => {
         if (event.target !== modalImage) {
           document.body.removeChild(modal);
         }
-      }
+      });
 
 
     });

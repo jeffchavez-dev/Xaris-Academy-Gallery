@@ -58,7 +58,7 @@ h3 {
     border-bottom: solid 1px var(--accent);
 }
 
-.nav-logo {
+.nav-logo a {
     text-decoration: none;
     color: black;
     cursor: pointer;
@@ -330,9 +330,9 @@ button > a:hover {
     position: absolute;
     top: 20px;
     right: 20px;
-    font-size: 25px;
-    color: #7f7e7e;
-    background-color: aliceblue;
+    font-size: 1.2em;
+    color: white;
+    background-color: var(--background);
     border-radius: 100%;
     cursor: pointer;
     padding: .2em;
