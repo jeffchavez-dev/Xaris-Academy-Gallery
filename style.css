@@ -326,3 +326,25 @@ footer {
     opacity: .8;
     padding: 10px;
 }
+
+
+.collapsible {
+    cursor: pointer;
+    /* background-color: var(--background); */
+    padding: 10px;
+    border: none;
+    text-align: left;
+    outline: none;
+    opacity: 0.8;
+}
+
+.collapsible.active {
+    color: var(--primary);
+    opacity: 1;
+}
+
+.content {
+    display: none;
+    padding: 0 15px;
+    overflow: hidden
+}

@@ -84,6 +84,7 @@ galleryImages.forEach(image => {
 const collapsibles = document.querySelectorAll(".collapsible");
 collapsibles.forEach(collapsible => {
     collapsible.addEventListener("click", function() {
+      console.log("Clicked")
       this.classList.toggle("active");
       const content = this.nextElementSibling;
       if (content.style.display === "block") {
