@@ -60,7 +60,8 @@ h3 {
 
 .nav-logo {
     text-decoration: none;
-    color: black
+    color: black;
+    cursor: pointer;
 }
 .nav > .links {
     color: var(--primary);
