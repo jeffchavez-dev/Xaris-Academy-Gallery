@@ -106,7 +106,9 @@ main, .gallery {
     margin: 1em;
 }
 
-
+.gallery-texts {
+    text-align: center;
+}
 .values {
     display: flex;
     flex-direction: row;
