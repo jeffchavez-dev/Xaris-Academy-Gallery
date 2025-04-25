@@ -17,10 +17,22 @@ html {
     scroll-behavior: smooth;
 }
 body {
-    background: url(/assets/Xaris\ Background.png);
-    background-color: var(--background);
+    z-index: 2;
     font-family: cursive;
 }
+
+.background {
+    background: url(/assets/Xaris\ Background.png);
+    background-color: var(--background);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    opacity: .6;
+    z-index: -1;
+}
+
 h2 {
     font-size: 4em;
     font: lucida handwriting;
@@ -121,6 +133,9 @@ main, .gallery {
     opacity: .7;
 }
 
+p {
+
+}
 @media (max-width: 500px) {
     .values > p {
         font-size: 1.5em;
@@ -335,7 +350,7 @@ footer {
     border: none;
     text-align: left;
     outline: none;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .collapsible.active {
