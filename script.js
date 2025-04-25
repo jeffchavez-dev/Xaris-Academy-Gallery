@@ -35,22 +35,11 @@ galleryImages.forEach(image => {
       console.log("Clicked")
       const modal = document.createElement("div");
       modal.classList.add("modal"); // Add a class for styling
+
       const modalImage = document.createElement("img");
       modalImage.classList.add("modal_image")
-
-
       modalImage.src = event.target.src; // Get source from clicked image
-      modalImage.style.cursor = "pointer";
 
-       // Get the position of the clicked image
-      const rect = image.getBoundingClientRect();
-
-      // Set the modal's position
-      modal.style.top = `${rect.top}px`;
-      modal.style.left = `${rect.left}px`;
-
-
-      modal.classList.add('show');
       const closeButton = document.createElement("button");
       closeButton.textContent = "Close";
       closeButton.classList.add("close-button"); // Add a class for styling
@@ -65,16 +54,13 @@ galleryImages.forEach(image => {
       // 4. Close modal functionality (optional)
       closeButton.addEventListener('click', () => {
         document.body.removeChild(modal);
-        modal.classList.remove('show');
       });
 
-
-      document.body.addEventListener('click', (event) => {
-        if (event.target !== image && !event.target.closest('.modal')) {
+      modal.addEventListener('click', (event) => {
+        if (event.target !== modalImage) {
           document.body.removeChild(modal);
-          document.body.removeEventListener('click', this); // Remove the event listener
         }
-      });
+      }
 
 
     });
