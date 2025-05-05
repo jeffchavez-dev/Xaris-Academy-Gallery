@@ -97,6 +97,7 @@ main, .gallery {
 
 .main-btns {
     display: flex;
+    flex-wrap: wrap;
     gap: 2em;
 }
 .core-values {
