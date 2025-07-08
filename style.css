@@ -409,13 +409,27 @@ footer {
 }
 
 .box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
+    border: solid 1px var(--accent);
+    border-radius: 10px;
+    height: 350px;
+    width: 200px;
+    padding: 1em;
+    box-shadow: 5px 5px 10px #9d6a47;
 }
+.grade-page-gallery {
+    height: 80%;
+    margin: auto;
 
+}
 .grade-page-img {
-    width: 500px;
-    max-width: 80%;
+    width: 100;
+    max-width: 90%;
     border-radius: 5px;
     box-shadow: 5px 5px 10px #9d6a47;
     cursor: pointer;
+    margin: auto;
 }
