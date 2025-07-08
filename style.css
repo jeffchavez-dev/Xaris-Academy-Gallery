@@ -416,9 +416,14 @@ footer {
     border: solid 1px var(--accent);
     border-radius: 10px;
     height: 350px;
-    width: 200px;
+    width: 250px;
     padding: 1em;
     box-shadow: 5px 5px 10px #9d6a47;
+}
+
+.box:hover {
+    transform: scale(1.05);
+    transition: .5s all ease-in-out;
 }
 .grade-page-gallery {
     height: 80%;
@@ -426,8 +431,10 @@ footer {
 
 }
 .grade-page-img {
-    width: 100;
-    max-width: 90%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* crops the image to fill the container */
+    display: block;
     border-radius: 5px;
     box-shadow: 5px 5px 10px #9d6a47;
     cursor: pointer;
