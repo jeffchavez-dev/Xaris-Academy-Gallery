@@ -397,3 +397,25 @@ footer {
     padding: 0 15px;
     overflow: hidden
 }
+
+
+.boxes {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 2em;
+    flex-wrap: wrap;
+}
+
+.box {
+    text-align: center;
+}
+
+.grade-page-img {
+    width: 500px;
+    max-width: 80%;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px #9d6a47;
+    cursor: pointer;
+}
