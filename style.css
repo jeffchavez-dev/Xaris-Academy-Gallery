@@ -68,7 +68,12 @@ h3 {
     text-decoration: none;
     
 }
+.nav-logo-img {
+    width: 75px;
+    vertical-align: middle;
+    margin-right: 10px;
 
+}
 main, .gallery {
     display: flex;
     flex-direction: row;
