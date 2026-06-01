@@ -201,6 +201,7 @@
     <button class="nav-item" onclick="switchPanel('subjects',this)"><i class="fa-solid fa-book-open"></i> Subjects</button>
     <button class="nav-item" onclick="switchPanel('materials',this)"><i class="fa-solid fa-layer-group"></i> Materials</button>
     <button class="nav-item" onclick="switchPanel('calendar',this)"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
+    <button class="nav-item" onclick="switchPanel('gallery',this)"><i class="fa-solid fa-images"></i> Gallery</button>
   </div>
   <div class="sidebar-footer">
     <div id="adminEmail" style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.7rem;word-break:break-all;"></div>
@@ -293,6 +294,54 @@
     </div>
   </div>
 
+  <!-- GALLERY -->
+  <div class="panel" id="panel-gallery">
+    <div class="panel-header">
+      <div class="panel-title">Gallery <span>Management</span></div>
+      <button class="btn btn-primary" onclick="openGradeModal()"><i class="fa-solid fa-plus"></i> Add Grade Level</button>
+    </div>
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#555;display:block;margin-bottom:0.35rem;">Grade Level</label>
+          <select id="galleryGradeSelect" onchange="onGradeChange()" style="width:100%;padding:0.65rem 0.85rem;border:1.5px solid var(--border);border-radius:7px;font-size:0.92rem;background:#fdf9f5;outline:none;">
+            <option value="">— Select a grade level —</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:1.4rem;" id="gradeActions" style="display:none">
+          <button class="btn btn-ghost btn-sm" onclick="openGradeModal(currentGradeId)"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGrade(currentGradeId)"><i class="fa-solid fa-trash"></i> Delete</button>
+          <a id="viewGradeLink" href="#" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> View</a>
+        </div>
+      </div>
+    </div>
+    <div id="galleryContent" style="display:none;">
+      <!-- Quarter tabs -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;" id="quarterTabs">
+        <button class="btn btn-primary btn-sm quarter-tab active" onclick="switchQuarter(1,this)">Quarter 1</button>
+        <button class="btn btn-ghost btn-sm quarter-tab" onclick="switchQuarter(2,this)">Quarter 2</button>
+        <button class="btn btn-ghost btn-sm quarter-tab" onclick="switchQuarter(3,this)">Quarter 3</button>
+        <button class="btn btn-ghost btn-sm quarter-tab" onclick="switchQuarter(4,this)">Quarter 4</button>
+      </div>
+      <!-- Sections -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div class="card-title" style="margin:0;"><i class="fa-solid fa-images"></i> Image Sections</div>
+          <button class="btn btn-primary btn-sm" onclick="openSectionModal()"><i class="fa-solid fa-plus"></i> Add Section</button>
+        </div>
+        <div id="sectionsList"><div style="color:var(--muted);font-style:italic;">Loading…</div></div>
+      </div>
+      <!-- Videos -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div class="card-title" style="margin:0;"><i class="fa-solid fa-film"></i> Videos</div>
+          <button class="btn btn-primary btn-sm" onclick="openVideoModal()"><i class="fa-solid fa-plus"></i> Add Video</button>
+        </div>
+        <div id="videosList"><div style="color:var(--muted);font-style:italic;">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- CALENDAR -->
   <div class="panel" id="panel-calendar">
     <div class="panel-header">
@@ -382,6 +431,115 @@
   </div>
 </div>
 
+<!-- MODAL: Grade Level -->
+<div class="modal-overlay" id="gradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="gradeModalTitle">Add Grade Level</div>
+      <button class="modal-close" onclick="closeModal('gradeModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="gradeId">
+      <div class="form-row">
+        <div class="form-group"><label>Grade Name</label><input id="gradeName" placeholder="e.g. Grade 2"></div>
+        <div class="form-group"><label>Display Order</label><input type="number" id="gradeOrder" placeholder="3" min="1"></div>
+      </div>
+      <div class="form-group">
+        <label>Slug (URL key)</label>
+        <input id="gradeSlug" placeholder="e.g. grade-two">
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Used in the public URL: /gallery-dynamic.html?grade=<em>slug</em></div>
+      </div>
+      <div class="form-group">
+        <label>Cover Image URL</label>
+        <input id="gradeCoverImage" placeholder="/assets/grade-two/cover.jpg or https://…">
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Shown as the thumbnail card on the Gallery page</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGrade()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Section -->
+<div class="modal-overlay" id="sectionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="sectionModalTitle">Add Section</div>
+      <button class="modal-close" onclick="closeModal('sectionModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sectionId">
+      <div class="form-group"><label>Section Title</label><input id="sectionTitle" placeholder="e.g. July pictures, Arts and Crafts"></div>
+      <div class="form-group"><label>Display Order</label><input type="number" id="sectionOrder" placeholder="1" min="1"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sectionModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSection()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Entry (image or caption) -->
+<div class="modal-overlay" id="entryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="entryModalTitle">Add Entry</div>
+      <button class="modal-close" onclick="closeModal('entryModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="entryId">
+      <input type="hidden" id="entrySectionId">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="entryType" onchange="toggleEntryFields()">
+          <option value="image">🖼️ Image</option>
+          <option value="caption">💬 Caption / Text</option>
+        </select>
+      </div>
+      <div class="form-group" id="entryImageGroup">
+        <label>Image URL</label>
+        <input id="entryImageUrl" placeholder="/assets/grade-two/photo1.jpg or https://…">
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Relative path (if file is in the repo) or full URL (Firebase Storage, etc.)</div>
+      </div>
+      <div class="form-group" id="entryCaptionGroup" style="display:none;">
+        <label>Caption Text</label>
+        <textarea id="entryCaptionText" rows="3" placeholder="e.g. Mira enjoyed learning karate this quarter."></textarea>
+      </div>
+      <div class="form-group"><label>Display Order</label><input type="number" id="entryOrder" placeholder="1" min="1"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('entryModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Video -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="videoModalTitle">Add Video</div>
+      <button class="modal-close" onclick="closeModal('videoModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="videoId">
+      <div class="form-group">
+        <label>YouTube URL or Embed URL</label>
+        <input id="videoUrl" placeholder="https://youtube.com/watch?v=… or https://youtu.be/…">
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Full YouTube URL — the embed ID will be extracted automatically</div>
+      </div>
+      <div class="form-group"><label>Title (optional)</label><input id="videoTitle" placeholder="e.g. Karate recital"></div>
+      <div class="form-group"><label>Display Order</label><input type="number" id="videoOrder" placeholder="1" min="1"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('videoModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVideo()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Calendar Event -->
 <div class="modal-overlay" id="eventModal">
   <div class="modal">
@@ -434,6 +592,7 @@ async function loadAll() {
   await loadSubjects();
   await loadMaterials();
   await loadEvents();
+  await loadGalleryGrades();
   updateStats();
   renderSubjectsGrid();
   renderMaterialsPanel();
@@ -841,6 +1000,397 @@ async function deleteEvent(id) {
     await loadEvents();
     renderCalendar(); renderEventsList(); updateStats();
   } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── GALLERY ──
+let galleryGrades = [];
+let gallerySections = [];
+let galleryEntries = [];
+let galleryVideos = [];
+let currentGradeId = null;
+let currentQuarter = 1;
+
+async function loadGalleryGrades() {
+  const snap = await db.collection('gallery_grades').orderBy('order').get().catch(() =>
+    db.collection('gallery_grades').get()
+  );
+  galleryGrades = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const sel = document.getElementById('galleryGradeSelect');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select a grade level —</option>' +
+    galleryGrades.map(g => `<option value="${g.id}" ${g.id===cur?'selected':''}>${g.name}</option>`).join('');
+}
+
+function onGradeChange() {
+  currentGradeId = document.getElementById('galleryGradeSelect').value;
+  if (!currentGradeId) {
+    document.getElementById('galleryContent').style.display = 'none';
+    document.getElementById('gradeActions').style.display = 'none';
+    return;
+  }
+  const g = galleryGrades.find(g => g.id === currentGradeId);
+  document.getElementById('gradeActions').style.display = 'flex';
+  document.getElementById('viewGradeLink').href = `../gallery-dynamic.html?grade=${g.slug}`;
+  document.getElementById('galleryContent').style.display = 'block';
+  currentQuarter = 1;
+  document.querySelectorAll('.quarter-tab').forEach((t,i) => {
+    t.classList.toggle('active', i === 0);
+    t.className = i === 0 ? 'btn btn-primary btn-sm quarter-tab active' : 'btn btn-ghost btn-sm quarter-tab';
+  });
+  loadGalleryQuarter();
+}
+
+function switchQuarter(q, btn) {
+  currentQuarter = q;
+  document.querySelectorAll('.quarter-tab').forEach(t => {
+    t.className = 'btn btn-ghost btn-sm quarter-tab';
+  });
+  btn.className = 'btn btn-primary btn-sm quarter-tab active';
+  loadGalleryQuarter();
+}
+
+async function loadGalleryQuarter() {
+  document.getElementById('sectionsList').innerHTML = '<div style="color:var(--muted);font-style:italic;">Loading…</div>';
+  document.getElementById('videosList').innerHTML = '<div style="color:var(--muted);font-style:italic;">Loading…</div>';
+  const [secSnap, vidSnap] = await Promise.all([
+    db.collection('gallery_sections')
+      .where('grade_id','==',currentGradeId)
+      .where('quarter','==',currentQuarter).get(),
+    db.collection('gallery_videos')
+      .where('grade_id','==',currentGradeId)
+      .where('quarter','==',currentQuarter).get()
+  ]);
+  gallerySections = secSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  gallerySections.sort((a,b) => (a.order||0)-(b.order||0));
+  galleryVideos = vidSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  galleryVideos.sort((a,b) => (a.order||0)-(b.order||0));
+
+  // Load all entries for these sections
+  if (gallerySections.length) {
+    const ids = gallerySections.map(s => s.id);
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i,i+30));
+    galleryEntries = [];
+    for (const chunk of chunks) {
+      const snap = await db.collection('gallery_entries').where('section_id','in',chunk).get();
+      galleryEntries.push(...snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }
+    galleryEntries.sort((a,b) => (a.order||0)-(b.order||0));
+  } else {
+    galleryEntries = [];
+  }
+  renderSectionsList();
+  renderVideosList();
+}
+
+function renderSectionsList() {
+  const el = document.getElementById('sectionsList');
+  if (!gallerySections.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-style:italic;">No sections yet. Add one!</div>';
+    return;
+  }
+  el.innerHTML = gallerySections.map(sec => {
+    const entries = galleryEntries.filter(e => e.section_id === sec.id);
+    const images = entries.filter(e => e.type === 'image');
+    const captions = entries.filter(e => e.type === 'caption');
+    return `
+    <div style="border:1.5px solid var(--border);border-radius:8px;margin-bottom:0.8rem;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:0.7rem;padding:0.75rem 1rem;background:#fdf9f5;">
+        <div style="flex:1;font-weight:700;">${sec.title || 'Untitled Section'}</div>
+        <span style="font-size:0.75rem;color:var(--muted);">${images.length} img · ${captions.length} captions</span>
+        <button class="btn btn-ghost btn-sm" onclick="openEntryModal('${sec.id}')"><i class="fa-solid fa-plus"></i> Add</button>
+        <button class="btn btn-ghost btn-sm" onclick="openSectionModal('${sec.id}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSection('${sec.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      ${entries.length ? `
+      <div style="padding:0.6rem 1rem;display:flex;flex-direction:column;gap:0.4rem;">
+        ${entries.map(e => `
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.84rem;padding:0.3rem 0;border-bottom:1px solid #f0e8e0;">
+          <span class="type-badge ${e.type==='image'?'badge-link':'badge-other'}">${e.type}</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">${e.type==='image'?`<a href="${e.value}" target="_blank" style="color:var(--accent);">${e.value}</a>`:e.value}</span>
+          <div style="display:flex;gap:0.3rem;flex-shrink:0;">
+            <button class="btn btn-ghost btn-sm" onclick="openEntryModal('${sec.id}','${e.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntry('${e.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderVideosList() {
+  const el = document.getElementById('videosList');
+  if (!galleryVideos.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-style:italic;">No videos yet. Add one!</div>';
+    return;
+  }
+  el.innerHTML = galleryVideos.map(v => `
+  <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.8rem;background:#fdf9f5;border-radius:7px;margin-bottom:0.5rem;border:1px solid var(--border);">
+    <i class="fa-brands fa-youtube" style="color:#dc2626;font-size:1.2rem;flex-shrink:0;"></i>
+    <div style="flex:1;overflow:hidden;">
+      <div style="font-weight:600;font-size:0.88rem;">${v.title || 'Untitled Video'}</div>
+      <div style="font-size:0.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.youtube_url}</div>
+    </div>
+    <div style="display:flex;gap:0.3rem;flex-shrink:0;">
+      <button class="btn btn-ghost btn-sm" onclick="openVideoModal('${v.id}')"><i class="fa-solid fa-pen"></i></button>
+      <button class="btn btn-danger btn-sm" onclick="deleteVideo('${v.id}')"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </div>`).join('');
+}
+
+// Grade CRUD
+function openGradeModal(id = null) {
+  document.getElementById('gradeModalTitle').textContent = id ? 'Edit Grade Level' : 'Add Grade Level';
+  document.getElementById('gradeId').value = id || '';
+  if (id) {
+    const g = galleryGrades.find(g => g.id === id);
+    document.getElementById('gradeName').value = g.name || '';
+    document.getElementById('gradeSlug').value = g.slug || '';
+    document.getElementById('gradeCoverImage').value = g.cover_image || '';
+    document.getElementById('gradeOrder').value = g.order || '';
+  } else {
+    document.getElementById('gradeName').value = '';
+    document.getElementById('gradeSlug').value = '';
+    document.getElementById('gradeCoverImage').value = '';
+    document.getElementById('gradeOrder').value = galleryGrades.length + 1;
+  }
+  document.getElementById('gradeModal').classList.add('open');
+}
+
+async function saveGrade() {
+  const id = document.getElementById('gradeId').value;
+  const name = document.getElementById('gradeName').value.trim();
+  let slug = document.getElementById('gradeSlug').value.trim();
+  if (!name) { toast('Grade name required', 'error'); return; }
+  if (!slug) slug = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const payload = {
+    name, slug,
+    cover_image: document.getElementById('gradeCoverImage').value.trim() || '',
+    order: parseInt(document.getElementById('gradeOrder').value) || galleryGrades.length + 1,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (id) {
+      await db.collection('gallery_grades').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('gallery_grades').add(payload);
+    }
+    toast(id ? 'Grade updated!' : 'Grade added!', 'success');
+    closeModal('gradeModal');
+    await loadGalleryGrades();
+    if (id && id === currentGradeId) onGradeChange();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteGrade(id) {
+  if (!confirm('Delete this grade level? This will also delete all its sections, entries, and videos.')) return;
+  try {
+    const batch = db.batch();
+    const [secSnap, vidSnap] = await Promise.all([
+      db.collection('gallery_sections').where('grade_id','==',id).get(),
+      db.collection('gallery_videos').where('grade_id','==',id).get()
+    ]);
+    const secIds = secSnap.docs.map(d => d.id);
+    secSnap.docs.forEach(d => batch.delete(d.ref));
+    vidSnap.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(db.collection('gallery_grades').doc(id));
+    // delete entries
+    if (secIds.length) {
+      for (let i = 0; i < secIds.length; i += 30) {
+        const chunk = secIds.slice(i,i+30);
+        const entSnap = await db.collection('gallery_entries').where('section_id','in',chunk).get();
+        entSnap.docs.forEach(d => batch.delete(d.ref));
+      }
+    }
+    await batch.commit();
+    toast('Grade deleted', 'success');
+    currentGradeId = null;
+    document.getElementById('galleryContent').style.display = 'none';
+    document.getElementById('gradeActions').style.display = 'none';
+    await loadGalleryGrades();
+    document.getElementById('galleryGradeSelect').value = '';
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// Section CRUD
+function openSectionModal(id = null) {
+  document.getElementById('sectionModalTitle').textContent = id ? 'Edit Section' : 'Add Section';
+  document.getElementById('sectionId').value = id || '';
+  if (id) {
+    const s = gallerySections.find(s => s.id === id);
+    document.getElementById('sectionTitle').value = s.title || '';
+    document.getElementById('sectionOrder').value = s.order || '';
+  } else {
+    document.getElementById('sectionTitle').value = '';
+    document.getElementById('sectionOrder').value = gallerySections.length + 1;
+  }
+  document.getElementById('sectionModal').classList.add('open');
+}
+
+async function saveSection() {
+  const id = document.getElementById('sectionId').value;
+  const title = document.getElementById('sectionTitle').value.trim();
+  if (!title) { toast('Title required', 'error'); return; }
+  const payload = {
+    grade_id: currentGradeId,
+    quarter: currentQuarter,
+    title,
+    order: parseInt(document.getElementById('sectionOrder').value) || gallerySections.length + 1,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (id) {
+      await db.collection('gallery_sections').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('gallery_sections').add(payload);
+    }
+    toast(id ? 'Section updated!' : 'Section added!', 'success');
+    closeModal('sectionModal');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteSection(id) {
+  if (!confirm('Delete this section and all its entries?')) return;
+  try {
+    const entSnap = await db.collection('gallery_entries').where('section_id','==',id).get();
+    const batch = db.batch();
+    entSnap.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(db.collection('gallery_sections').doc(id));
+    await batch.commit();
+    toast('Section deleted', 'success');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// Entry CRUD
+function openEntryModal(sectionId, entryId = null) {
+  document.getElementById('entryModalTitle').textContent = entryId ? 'Edit Entry' : 'Add Entry';
+  document.getElementById('entrySectionId').value = sectionId;
+  document.getElementById('entryId').value = entryId || '';
+  if (entryId) {
+    const e = galleryEntries.find(e => e.id === entryId);
+    document.getElementById('entryType').value = e.type || 'image';
+    document.getElementById('entryOrder').value = e.order || '';
+    if (e.type === 'image') {
+      document.getElementById('entryImageUrl').value = e.value || '';
+      document.getElementById('entryCaptionText').value = '';
+    } else {
+      document.getElementById('entryCaptionText').value = e.value || '';
+      document.getElementById('entryImageUrl').value = '';
+    }
+  } else {
+    const sectionEntries = galleryEntries.filter(e => e.section_id === sectionId);
+    document.getElementById('entryType').value = 'image';
+    document.getElementById('entryOrder').value = sectionEntries.length + 1;
+    document.getElementById('entryImageUrl').value = '';
+    document.getElementById('entryCaptionText').value = '';
+  }
+  toggleEntryFields();
+  document.getElementById('entryModal').classList.add('open');
+}
+
+function toggleEntryFields() {
+  const type = document.getElementById('entryType').value;
+  document.getElementById('entryImageGroup').style.display = type === 'image' ? 'block' : 'none';
+  document.getElementById('entryCaptionGroup').style.display = type === 'caption' ? 'block' : 'none';
+}
+
+async function saveEntry() {
+  const id = document.getElementById('entryId').value;
+  const type = document.getElementById('entryType').value;
+  const value = type === 'image'
+    ? document.getElementById('entryImageUrl').value.trim()
+    : document.getElementById('entryCaptionText').value.trim();
+  if (!value) { toast('Value required', 'error'); return; }
+  const sectionId = document.getElementById('entrySectionId').value;
+  const payload = {
+    section_id: sectionId,
+    grade_id: currentGradeId,
+    quarter: currentQuarter,
+    type, value,
+    order: parseInt(document.getElementById('entryOrder').value) || 1,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (id) {
+      await db.collection('gallery_entries').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('gallery_entries').add(payload);
+    }
+    toast(id ? 'Entry updated!' : 'Entry added!', 'success');
+    closeModal('entryModal');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  try {
+    await db.collection('gallery_entries').doc(id).delete();
+    toast('Entry deleted', 'success');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// Video CRUD
+function openVideoModal(id = null) {
+  document.getElementById('videoModalTitle').textContent = id ? 'Edit Video' : 'Add Video';
+  document.getElementById('videoId').value = id || '';
+  if (id) {
+    const v = galleryVideos.find(v => v.id === id);
+    document.getElementById('videoUrl').value = v.youtube_url || '';
+    document.getElementById('videoTitle').value = v.title || '';
+    document.getElementById('videoOrder').value = v.order || '';
+  } else {
+    document.getElementById('videoUrl').value = '';
+    document.getElementById('videoTitle').value = '';
+    document.getElementById('videoOrder').value = galleryVideos.length + 1;
+  }
+  document.getElementById('videoModal').classList.add('open');
+}
+
+function extractYoutubeId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^?&\s]{11})/);
+  return m ? m[1] : null;
+}
+
+async function saveVideo() {
+  const id = document.getElementById('videoId').value;
+  const url = document.getElementById('videoUrl').value.trim();
+  if (!url) { toast('YouTube URL required', 'error'); return; }
+  if (!extractYoutubeId(url)) { toast('Could not extract YouTube video ID. Check the URL.', 'error'); return; }
+  const payload = {
+    grade_id: currentGradeId,
+    quarter: currentQuarter,
+    youtube_url: url,
+    title: document.getElementById('videoTitle').value.trim() || '',
+    order: parseInt(document.getElementById('videoOrder').value) || galleryVideos.length + 1,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (id) {
+      await db.collection('gallery_videos').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('gallery_videos').add(payload);
+    }
+    toast(id ? 'Video updated!' : 'Video added!', 'success');
+    closeModal('videoModal');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteVideo(id) {
+  if (!confirm('Delete this video?')) return;
+  try {
+    await db.collection('gallery_videos').doc(id).delete();
+    toast('Video deleted', 'success');
+    await loadGalleryQuarter();
+  } catch(e) { toast(e.message,'error'); }
 }
 
 // ── MODALS ──

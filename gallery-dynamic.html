@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://kit.fontawesome.com/59a0f15bbd.js" crossorigin="anonymous"></script>
+  <link type="text/css" rel="stylesheet" href="css/lightgallery.css" />
+  <link type="text/css" rel="stylesheet" href="css/lg-zoom.css" />
+  <link type="text/css" rel="stylesheet" href="css/lg-thumbnail.css" />
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <title>Xaris Gallery</title>
+</head>
+<body>
+  <div class="background"></div>
+  <header class="header">
+    <h1 class="nav-logo"><a href="index.html">
+      <img src="/Xaris_Logo_updated-removebg-preview.png" alt="Xaris Academy Logo" class="nav-logo-img">
+      Xaris Academy</a>
+    </h1>
+    <nav class="nav">
+      <a href="lessons.html" class="links">Lessons</a>
+      <a href="grade-page.html" class="links">Gallery</a>
+    </nav>
+  </header>
+
+  <div id="gradeTitle" style="text-align:center;padding:1.5em 1em 0.5em;">
+    <h2 id="gradeTitleText">Loading…</h2>
+  </div>
+
+  <div id="galleryBody"></div>
+
+  <div>
+    <button class="back-btn"><a href="grade-page.html"><i class="fa-solid fa-arrow-left"></i></a></button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('grade');
+
+    async function loadGallery() {
+      if (!slug) {
+        document.getElementById('gradeTitleText').textContent = 'No grade specified.';
+        return;
+      }
+
+      // Find grade by slug
+      const gradeSnap = await db.collection('gallery_grades').where('slug','==',slug).limit(1).get();
+      if (gradeSnap.empty) {
+        document.getElementById('gradeTitleText').textContent = 'Grade not found.';
+        return;
+      }
+      const gradeDoc = gradeSnap.docs[0];
+      const grade = { id: gradeDoc.id, ...gradeDoc.data() };
+      document.getElementById('gradeTitleText').textContent = grade.name;
+      document.title = `${grade.name} — Xaris Academy`;
+
+      const body = document.getElementById('galleryBody');
+
+      for (let q = 1; q <= 4; q++) {
+        const [secSnap, vidSnap] = await Promise.all([
+          db.collection('gallery_sections')
+            .where('grade_id','==',grade.id)
+            .where('quarter','==',q).get(),
+          db.collection('gallery_videos')
+            .where('grade_id','==',grade.id)
+            .where('quarter','==',q).get()
+        ]);
+
+        const sections = secSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        sections.sort((a,b) => (a.order||0)-(b.order||0));
+        const videos = vidSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        videos.sort((a,b) => (a.order||0)-(b.order||0));
+
+        // Skip empty quarters
+        if (!sections.length && !videos.length) continue;
+
+        // Load entries for all sections in this quarter
+        let allEntries = [];
+        if (sections.length) {
+          const ids = sections.map(s => s.id);
+          for (let i = 0; i < ids.length; i += 30) {
+            const chunk = ids.slice(i, i+30);
+            const entSnap = await db.collection('gallery_entries').where('section_id','in',chunk).get();
+            allEntries.push(...entSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+          }
+          allEntries.sort((a,b) => (a.order||0)-(b.order||0));
+        }
+
+        // Build quarter HTML
+        let sectionsHtml = '';
+        for (const sec of sections) {
+          const entries = allEntries.filter(e => e.section_id === sec.id);
+          let entriesHtml = entries.map(e => {
+            if (e.type === 'image') {
+              return `<img class="reveal gallery_images" src="${e.value}" alt="">`;
+            } else {
+              return `<p class="gallery-texts">${e.value}</p>`;
+            }
+          }).join('\n');
+
+          sectionsHtml += `
+          <div class="img_gallery">
+            <h3><i>${sec.title}</i></h3>
+            <br><br><hr>
+            ${entriesHtml}
+          </div>`;
+        }
+
+        let videosHtml = '';
+        if (videos.length) {
+          const videoItems = videos.map(v => {
+            const ytId = extractYoutubeId(v.youtube_url);
+            if (!ytId) return '';
+            return `
+            <div class="videos reveal">
+              <iframe width="500" height="315"
+                src="https://www.youtube.com/embed/${ytId}"
+                title="${v.title || 'YouTube video'}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+            </div>`;
+          }).join('');
+          videosHtml = `
+          <br><br><hr><br>
+          <h3>Videos</h3>
+          <div class="video-gallery">${videoItems}</div>`;
+        }
+
+        const quarterDiv = document.createElement('div');
+        quarterDiv.className = 'quarter';
+        quarterDiv.innerHTML = `
+          <div class="collapsible">
+            <h2><i class="fa-solid fa-arrow-up-right-from-square"></i>  Quarter ${q}</h2>
+          </div>
+          <div class="content">
+            <br><br><hr><br>
+            <h3>Images</h3>
+            <div class="img_gallery">
+              ${sectionsHtml}
+            </div>
+            ${videosHtml}
+          </div>`;
+        body.appendChild(quarterDiv);
+      }
+
+      // Re-init collapsibles and reveal
+      initCollapsibles();
+      reveal();
+    }
+
+    function extractYoutubeId(url) {
+      const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^?&\s]{11})/);
+      return m ? m[1] : null;
+    }
+
+    function initCollapsibles() {
+      document.querySelectorAll('.collapsible').forEach(el => {
+        el.addEventListener('click', function() {
+          this.classList.toggle('active');
+          const content = this.nextElementSibling;
+          content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        });
+      });
+    }
+
+    function reveal() {
+      document.querySelectorAll('.reveal').forEach(el => {
+        const top = el.getBoundingClientRect().top;
+        if (top < window.innerHeight - 150) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+    }
+    window.addEventListener('scroll', reveal, { passive: true });
+
+    loadGallery();
+  </script>
+
+  <script src="js/lightgallery.min.js"></script>
+  <script src="js/plugins/lg-thumbnail.umd.js"></script>
+  <script src="js/plugins/lg-zoom.umd.js"></script>
+</body>
+</html>
