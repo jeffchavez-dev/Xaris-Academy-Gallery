@@ -9,7 +9,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="../firebase-config.js"></script>
   <style>
     :root {
@@ -591,15 +590,9 @@
         <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Used in the public URL: /gallery-dynamic.html?grade=<em>slug</em></div>
       </div>
       <div class="form-group">
-        <label>Cover Image</label>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-          <input id="gradeCoverImage" placeholder="/assets/grade-two/cover.jpg or https://…" style="flex:1;min-width:0;">
-          <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap;">
-            <i class="fa-solid fa-upload"></i> Upload
-            <input type="file" id="gradeCoverFile" accept="image/*" style="display:none;" onchange="uploadCoverImage(this)">
-          </label>
-        </div>
-        <div id="gradeCoverUploadStatus" style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Shown as the thumbnail on the Gallery page</div>
+        <label>Cover Image URL</label>
+        <input id="gradeCoverImage" placeholder="/assets/grade-two/cover.jpg or https://…">
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Shown as the thumbnail on the Gallery page</div>
       </div>
       <div class="form-group">
         <label>Custom Page URL <span style="font-weight:400;color:var(--muted);">(optional — for existing static pages)</span></label>
@@ -655,15 +648,8 @@
         </select>
       </div>
       <div class="form-group" id="entryImageGroup">
-        <label>Image</label>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-          <input id="entryImageUrl" placeholder="https://… or /assets/…" style="flex:1;min-width:0;">
-          <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap;">
-            <i class="fa-solid fa-upload"></i> Upload
-            <input type="file" id="entryImageFile" accept="image/*" style="display:none;" onchange="uploadEntryImage(this)">
-          </label>
-        </div>
-        <div id="entryUploadStatus" style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Upload from your device or paste a URL</div>
+        <label>Image URL</label>
+        <input id="entryImageUrl" placeholder="https://… or /assets/…">
         <div id="entryImagePreview" style="display:none;margin-top:0.5rem;">
           <img id="entryPreviewImg" src="" style="max-width:100%;max-height:150px;border-radius:6px;border:1px solid var(--border);">
         </div>
@@ -1692,8 +1678,6 @@ function openGradeModal(id = null) {
     document.getElementById('gradeOrder').value = galleryGrades.length + 1;
     sySel.value = schoolYearDocId || '';
   }
-  document.getElementById('gradeCoverUploadStatus').textContent = 'Shown as the thumbnail on the Gallery page';
-  document.getElementById('gradeCoverUploadStatus').style.color = 'var(--muted)';
   document.getElementById('gradeModal').classList.add('open');
 }
 
@@ -1831,10 +1815,7 @@ function openEntryModal(sectionId, entryId = null) {
     document.getElementById('entryCaptionText').value = '';
   }
   toggleEntryFields();
-  document.getElementById('entryUploadStatus').textContent = 'Upload from your device or paste a URL';
-  document.getElementById('entryUploadStatus').style.color = 'var(--muted)';
   document.getElementById('entryImagePreview').style.display = 'none';
-  document.getElementById('entryImageFile').value = '';
   document.getElementById('entryModal').classList.add('open');
 }
 
@@ -1939,52 +1920,6 @@ async function deleteVideo(id) {
   } catch(e) { toast(e.message,'error'); }
 }
 
-// ── UPLOAD HELPERS ──
-async function uploadToStorage(file, folder) {
-  const safeName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-  const ref = storage.ref(`${folder}/${safeName}`);
-  const snap = await ref.put(file);
-  return await snap.ref.getDownloadURL();
-}
-
-async function uploadCoverImage(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const status = document.getElementById('gradeCoverUploadStatus');
-  status.textContent = 'Uploading…';
-  status.style.color = 'var(--accent)';
-  try {
-    const url = await uploadToStorage(file, 'gallery/covers');
-    document.getElementById('gradeCoverImage').value = url;
-    status.textContent = 'Uploaded successfully';
-    status.style.color = 'var(--success)';
-  } catch(e) {
-    status.textContent = 'Upload failed: ' + e.message;
-    status.style.color = 'var(--danger)';
-  }
-}
-
-async function uploadEntryImage(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const status = document.getElementById('entryUploadStatus');
-  const preview = document.getElementById('entryImagePreview');
-  const previewImg = document.getElementById('entryPreviewImg');
-  status.textContent = 'Uploading…';
-  status.style.color = 'var(--accent)';
-  preview.style.display = 'none';
-  try {
-    const url = await uploadToStorage(file, 'gallery/images');
-    document.getElementById('entryImageUrl').value = url;
-    previewImg.src = url;
-    preview.style.display = 'block';
-    status.textContent = 'Uploaded successfully';
-    status.style.color = 'var(--success)';
-  } catch(e) {
-    status.textContent = 'Upload failed: ' + e.message;
-    status.style.color = 'var(--danger)';
-  }
-}
 
 // Show preview when URL is pasted manually
 document.addEventListener('DOMContentLoaded', () => {
