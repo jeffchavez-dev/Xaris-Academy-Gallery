@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Xaris Academy</title>
+  <script src="https://kit.fontawesome.com/59a0f15bbd.js" crossorigin="anonymous"></script>
+  <!-- Firebase compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    :root {
+      --bg: #ffedd4; --accent: #9d6a47; --accent-dark: #7a4f30;
+      --accent-light: #f5e6d6; --sidebar-w: 240px;
+      --border: #e8d9cc; --text: #2c1810; --muted: #888;
+      --success: #16a34a; --danger: #dc2626; --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f5ece0; color: var(--text); min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--accent-dark);
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 1.4rem 1rem 1rem;
+      display: flex; align-items: center; gap: 0.7rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo img { width: 38px; border-radius: 6px; }
+    .sidebar-logo span { font-family: 'Lucida Handwriting', cursive; color: white; font-size: 0.85rem; line-height: 1.3; }
+    .nav-section { padding: 1rem 0.6rem 0.4rem; }
+    .nav-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); padding: 0 0.6rem; margin-bottom: 0.3rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.65rem 0.8rem; border-radius: 8px;
+      color: rgba(255,255,255,0.75); cursor: pointer;
+      font-size: 0.9rem; transition: all 0.15s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.18); color: white; font-weight: 600; }
+    .nav-item i { width: 18px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .logout-btn {
+      display: flex; align-items: center; gap: 0.6rem;
+      width: 100%; padding: 0.6rem 0.8rem;
+      background: rgba(220,38,38,0.15); color: #fca5a5;
+      border: 1px solid rgba(220,38,38,0.25); border-radius: 8px;
+      cursor: pointer; font-size: 0.88rem; transition: all 0.15s;
+    }
+    .logout-btn:hover { background: rgba(220,38,38,0.3); color: white; }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); min-height: 100vh; padding: 2rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .panel-title { font-size: 1.5rem; font-weight: 700; }
+    .panel-title span { color: var(--accent); }
+
+    /* CARDS */
+    .card { background: white; border-radius: var(--radius); padding: 1.4rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(157,106,71,0.08); margin-bottom: 1.2rem; }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+    /* FORMS */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 0.65rem 0.85rem;
+      border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: 0.92rem; outline: none; transition: border-color 0.2s;
+      background: #fdf9f5; font-family: inherit;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); background: white; }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem; border-radius: 7px; font-size: 0.88rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .btn-danger { background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
+    .btn-danger:hover { background: var(--danger); color: white; }
+    .btn-ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { background: var(--accent-light); border-color: var(--accent); }
+
+    /* SUBJECT GRID */
+    .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+    .subject-card { background: white; border-radius: var(--radius); border: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(157,106,71,0.07); overflow: hidden; }
+    .subject-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.1rem; }
+    .subject-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .subject-info { flex: 1; min-width: 0; }
+    .subject-name { font-weight: 700; font-size: 0.95rem; }
+    .subject-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .subject-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .subject-materials { border-top: 1px solid var(--border); padding: 0.7rem 1.1rem; background: #fdf9f5; }
+    .subject-materials-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    .subject-materials-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .material-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0; border-bottom: 1px solid #f0e8e0; font-size: 0.85rem; }
+    .material-item:last-child { border-bottom: none; }
+    .type-badge { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 20px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
+    .badge-book     { background: #fef3c7; color: #92400e; }
+    .badge-link     { background: #dbeafe; color: #1e40af; }
+    .badge-worksheet{ background: #dcfce7; color: #166534; }
+    .badge-video    { background: #fce7f3; color: #9d174d; }
+    .badge-other    { background: #f3f4f6; color: #374151; }
+    .material-title { flex: 1; }
+    .no-materials { color: var(--muted); font-size: 0.82rem; font-style: italic; padding: 0.3rem 0; }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: white; border-radius: var(--radius); padding: 1.1rem; border: 1px solid var(--border); text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+    .year-badge { display: inline-block; padding: 0.3rem 0.9rem; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border); }
+
+    /* CALENDAR */
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; background: var(--accent); color: white; border-radius: var(--radius) var(--radius) 0 0; }
+    .cal-nav h3 { font-size: 1.1rem; font-weight: 700; }
+    .cal-nav-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
+    .cal-nav-btn:hover { background: rgba(255,255,255,0.35); }
+    .cal-grid { padding: 1rem; background: white; border-radius: 0 0 var(--radius) var(--radius); border: 1px solid var(--border); border-top: none; }
+    .cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .cal-day { min-height: 70px; padding: 0.4rem; border-radius: 7px; font-size: 0.82rem; border: 1.5px solid transparent; transition: border-color 0.15s; cursor: pointer; }
+    .cal-day:hover { border-color: var(--accent); background: var(--accent-light); }
+    .cal-day.empty { cursor: default; }
+    .cal-day.empty:hover { border-color: transparent; background: transparent; }
+    .cal-day.today { background: #fff7ed; border-color: var(--accent); }
+    .cal-day-num { font-weight: 700; font-size: 0.85rem; }
+    .cal-day.today .cal-day-num { color: var(--accent); }
+    .cal-event-dot { font-size: 0.68rem; margin-top: 2px; border-radius: 3px; padding: 1px 4px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .event-list-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; background: #fdf9f5; border-radius: 7px; margin-bottom: 0.5rem; border: 1px solid var(--border); }
+    .event-date-badge { font-size: 0.75rem; font-weight: 700; color: var(--accent); min-width: 52px; text-align: center; }
+    .event-title-text { flex: 1; font-size: 0.88rem; font-weight: 600; }
+    .no-events { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 999; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 14px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; z-index: 1; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close { width: 30px; height: 30px; border-radius: 50%; background: #f3f4f6; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #555; }
+    .modal-close:hover { background: #e5e7eb; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.7rem; }
+
+    /* TOAST */
+    .toast-container { position: fixed; top: 1.2rem; right: 1.2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast { padding: 0.75rem 1.1rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.15); animation: slideIn 0.25s ease; }
+    .toast-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .toast-error   { background: #fee2e2; color: #dc2626;  border: 1px solid #fca5a5; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* MATERIALS PANEL */
+    .materials-table { width: 100%; border-collapse: collapse; }
+    .materials-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0.5rem 0.7rem; border-bottom: 2px solid var(--border); }
+    .materials-table td { padding: 0.6rem 0.7rem; border-bottom: 1px solid #f0e8e0; font-size: 0.88rem; vertical-align: middle; }
+    .materials-table tr:last-child td { border-bottom: none; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 1rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .subjects-grid { grid-template-columns: 1fr; }
+    }
+    .mobile-menu-btn { display: none; position: fixed; top: 1rem; left: 1rem; z-index: 200; background: var(--accent); color: white; border: none; border-radius: 8px; padding: 0.5rem 0.7rem; cursor: pointer; font-size: 1.1rem; }
+    @media (max-width: 768px) { .mobile-menu-btn { display: flex; } }
+  </style>
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+  <i class="fa-solid fa-bars"></i>
+</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="../Xaris_Logo_updated-removebg-preview.png" alt="Xaris">
+    <span>Xaris Academy<br>Admin</span>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" onclick="switchPanel('overview',this)"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Content</div>
+    <button class="nav-item" onclick="switchPanel('schoolyear',this)"><i class="fa-solid fa-graduation-cap"></i> School Year</button>
+    <button class="nav-item" onclick="switchPanel('subjects',this)"><i class="fa-solid fa-book-open"></i> Subjects</button>
+    <button class="nav-item" onclick="switchPanel('materials',this)"><i class="fa-solid fa-layer-group"></i> Materials</button>
+    <button class="nav-item" onclick="switchPanel('calendar',this)"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
+  </div>
+  <div class="sidebar-footer">
+    <div id="adminEmail" style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.7rem;word-break:break-all;"></div>
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="panel-header">
+      <div class="panel-title">Dashboard <span>Overview</span></div>
+      <div class="year-badge" id="overviewYear">Loading…</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statSubjects">—</div><div class="stat-label">Subjects</div></div>
+      <div class="stat-card"><div class="stat-num" id="statMaterials">—</div><div class="stat-label">Materials</div></div>
+      <div class="stat-card"><div class="stat-num" id="statEvents">—</div><div class="stat-label">Calendar Events</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+      <div style="display:flex;gap:0.7rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="switchPanel('schoolyear',document.querySelectorAll('.nav-item')[1])"><i class="fa-solid fa-pen"></i> Edit Goals & Methods</button>
+        <button class="btn btn-ghost" onclick="switchPanel('subjects',document.querySelectorAll('.nav-item')[2]);openSubjectModal()"><i class="fa-solid fa-plus"></i> Add Subject</button>
+        <button class="btn btn-ghost" onclick="switchPanel('calendar',document.querySelectorAll('.nav-item')[4]);openEventModal()"><i class="fa-solid fa-calendar-plus"></i> Add Event</button>
+        <a href="../lessons.html" target="_blank" class="btn btn-ghost"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Lessons Page</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHOOL YEAR -->
+  <div class="panel" id="panel-schoolyear">
+    <div class="panel-header">
+      <div class="panel-title">School Year <span>Settings</span></div>
+      <button class="btn btn-primary" onclick="saveSchoolYear()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-school"></i> Year Info</div>
+      <div class="form-row">
+        <div class="form-group"><label>School Year</label><input id="syYear" placeholder="e.g. 2026-2027"></div>
+        <div class="form-group"><label>Grade Level</label><input id="syGrade" placeholder="e.g. Grade 2"></div>
+      </div>
+      <div class="form-group"><label>Student Name</label><input id="syStudent" placeholder="e.g. Myrrh"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-bullseye"></i> Goals</div>
+      <div class="form-group"><textarea id="syGoals" rows="5" placeholder="Enter goals for this school year…"></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-lightbulb"></i> Methods</div>
+      <div class="form-group"><textarea id="syMethods" rows="5" placeholder="Describe teaching methods and approach…"></textarea></div>
+    </div>
+  </div>
+
+  <!-- SUBJECTS -->
+  <div class="panel" id="panel-subjects">
+    <div class="panel-header">
+      <div class="panel-title">Subjects <span>&amp; Materials</span></div>
+      <button class="btn btn-primary" onclick="openSubjectModal()"><i class="fa-solid fa-plus"></i> Add Subject</button>
+    </div>
+    <div class="subjects-grid" id="subjectsGrid">
+      <div style="color:var(--muted);font-style:italic;">Loading subjects…</div>
+    </div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="panel" id="panel-materials">
+    <div class="panel-header">
+      <div class="panel-title">Materials <span>Library</span></div>
+      <button class="btn btn-primary" onclick="openMaterialModal(null)"><i class="fa-solid fa-plus"></i> Add Material</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:0.7rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+        <select id="matFilterSubject" onchange="renderMaterialsPanel()" style="padding:0.45rem 0.8rem;border:1.5px solid var(--border);border-radius:7px;font-size:0.88rem;background:#fdf9f5;outline:none;">
+          <option value="">All Subjects</option>
+        </select>
+        <select id="matFilterType" onchange="renderMaterialsPanel()" style="padding:0.45rem 0.8rem;border:1.5px solid var(--border);border-radius:7px;font-size:0.88rem;background:#fdf9f5;outline:none;">
+          <option value="">All Types</option>
+          <option value="book">Book</option>
+          <option value="link">Link</option>
+          <option value="worksheet">Worksheet</option>
+          <option value="video">Video</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="materialsList"><div style="color:var(--muted);font-style:italic;">Loading materials…</div></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="panel" id="panel-calendar">
+    <div class="panel-header">
+      <div class="panel-title">Calendar <span>Events</span></div>
+      <button class="btn btn-primary" onclick="openEventModal()"><i class="fa-solid fa-calendar-plus"></i> Add Event</button>
+    </div>
+    <div style="margin-bottom:1.2rem;">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <h3 id="calMonthLabel">—</h3>
+        <button class="cal-nav-btn" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-days-header"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div class="cal-days" id="calDays"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-list"></i> All Events</div>
+      <div id="eventsList"><div style="color:var(--muted);font-style:italic;">No events yet.</div></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: Subject -->
+<div class="modal-overlay" id="subjectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="subjectModalTitle">Add Subject</div>
+      <button class="modal-close" onclick="closeModal('subjectModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="subjectId">
+      <div class="form-row">
+        <div class="form-group"><label>Subject Name</label><input id="subjectName" placeholder="e.g. Cursive Writing"></div>
+        <div class="form-group"><label>Icon (emoji)</label><input id="subjectIcon" placeholder="e.g. ✍️" maxlength="4"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Color</label>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <input type="color" id="subjectColor" value="#9d6a47" style="width:48px;height:36px;padding:2px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;">
+            <input type="text" id="subjectColorText" placeholder="#9d6a47" style="flex:1;">
+          </div>
+        </div>
+        <div class="form-group"><label>Display Order</label><input type="number" id="subjectOrder" placeholder="1" min="0"></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="subjectDesc" rows="3" placeholder="Describe this subject…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('subjectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubject()"><i class="fa-solid fa-floppy-disk"></i> Save Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Material -->
+<div class="modal-overlay" id="materialModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="materialModalTitle">Add Material</div>
+      <button class="modal-close" onclick="closeModal('materialModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="materialId">
+      <div class="form-group"><label>Title</label><input id="materialTitle" placeholder="e.g. Handwriting Without Tears"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="materialType">
+            <option value="book">📚 Book</option>
+            <option value="link">🔗 Link</option>
+            <option value="worksheet">📄 Worksheet</option>
+            <option value="video">🎬 Video</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Subject</label><select id="materialSubjectSelect"></select></div>
+      </div>
+      <div class="form-group"><label>URL (optional)</label><input type="url" id="materialUrl" placeholder="https://…"></div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="materialNotes" rows="2" placeholder="Any notes…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('materialModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMaterial()"><i class="fa-solid fa-floppy-disk"></i> Save Material</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Calendar Event -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="eventModalTitle">Add Event</div>
+      <button class="modal-close" onclick="closeModal('eventModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="eventId">
+      <div class="form-group"><label>Event Title</label><input id="eventTitle" placeholder="e.g. Math Quiz, Museum Visit"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="eventDate"></div>
+        <div class="form-group"><label>Linked Subject (optional)</label><select id="eventSubject"><option value="">— None —</option></select></div>
+      </div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="eventNotes" rows="2" placeholder="Any details…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('eventModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()"><i class="fa-solid fa-floppy-disk"></i> Save Event</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let schoolYearDocId = null;
+let subjects = [];
+let materials = [];
+let calEvents = [];
+let calMonth = new Date().getMonth();
+let calYear  = new Date().getFullYear();
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const YEAR_KEY = '2026-2027';
+
+// ── AUTH GUARD ──
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  document.getElementById('adminEmail').textContent = user.email;
+  await loadAll();
+});
+
+async function logout() {
+  await auth.signOut();
+  window.location.href = 'login.html';
+}
+
+// ── LOAD ──
+async function loadAll() {
+  await loadSchoolYear();
+  await loadSubjects();
+  await loadMaterials();
+  await loadEvents();
+  updateStats();
+  renderSubjectsGrid();
+  renderMaterialsPanel();
+  renderCalendar();
+  renderEventsList();
+}
+
+async function loadSchoolYear() {
+  const snap = await db.collection('school_years').where('year','==', YEAR_KEY).limit(1).get();
+  if (snap.empty) {
+    // Create it if it doesn't exist
+    const ref = await db.collection('school_years').add({
+      year: '2026-2027', grade: 'Grade 2', student_name: 'Myrrh',
+      goals: '', methods: '', created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    schoolYearDocId = ref.id;
+    return;
+  }
+  const doc = snap.docs[0];
+  schoolYearDocId = doc.id;
+  const d = doc.data();
+  document.getElementById('syYear').value    = d.year || '';
+  document.getElementById('syGrade').value   = d.grade || '';
+  document.getElementById('syStudent').value = d.student_name || '';
+  document.getElementById('syGoals').value   = d.goals || '';
+  document.getElementById('syMethods').value = d.methods || '';
+  document.getElementById('overviewYear').textContent = `${d.grade} · ${d.year}`;
+}
+
+async function loadSubjects() {
+  if (!schoolYearDocId) return;
+  const snap = await db.collection('subjects').where('school_year_id','==', schoolYearDocId).get();
+  subjects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  subjects.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+}
+
+async function loadMaterials() {
+  if (!subjects.length) { materials = []; return; }
+  const ids = subjects.map(s => s.id);
+  // Firestore 'in' supports up to 30 items per query
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i+30));
+  materials = [];
+  for (const chunk of chunks) {
+    const snap = await db.collection('materials').where('subject_id','in', chunk).get();
+    materials.push(...snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }
+  materials.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+}
+
+async function loadEvents() {
+  if (!schoolYearDocId) return;
+  const snap = await db.collection('calendar_events').where('school_year_id','==', schoolYearDocId).get();
+  calEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  calEvents.sort((a,b) => a.event_date.localeCompare(b.event_date));
+}
+
+// ── STATS ──
+function updateStats() {
+  document.getElementById('statSubjects').textContent  = subjects.length;
+  document.getElementById('statMaterials').textContent = materials.length;
+  document.getElementById('statEvents').textContent    = calEvents.length;
+}
+
+// ── NAV ──
+function switchPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'materials') populateMatFilter();
+  if (window.innerWidth < 769) document.getElementById('sidebar').classList.remove('open');
+}
+
+// ── SCHOOL YEAR ──
+async function saveSchoolYear() {
+  const payload = {
+    year:         document.getElementById('syYear').value.trim(),
+    grade:        document.getElementById('syGrade').value.trim(),
+    student_name: document.getElementById('syStudent').value.trim(),
+    goals:        document.getElementById('syGoals').value.trim(),
+    methods:      document.getElementById('syMethods').value.trim(),
+    updated_at:   firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    if (schoolYearDocId) {
+      await db.collection('school_years').doc(schoolYearDocId).update(payload);
+    } else {
+      const ref = await db.collection('school_years').add({ ...payload, created_at: firebase.firestore.FieldValue.serverTimestamp() });
+      schoolYearDocId = ref.id;
+    }
+    toast('School year saved!', 'success');
+    document.getElementById('overviewYear').textContent = `${payload.grade} · ${payload.year}`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── SUBJECTS ──
+function renderSubjectsGrid() {
+  const grid = document.getElementById('subjectsGrid');
+  if (!subjects.length) { grid.innerHTML = '<div style="color:var(--muted);font-style:italic;">No subjects yet. Add one!</div>'; return; }
+  grid.innerHTML = subjects.map(s => {
+    const mats = materials.filter(m => m.subject_id === s.id);
+    return `
+    <div class="subject-card">
+      <div class="subject-card-header">
+        <div class="subject-icon" style="background:${s.color}22;">${s.icon||'📚'}</div>
+        <div class="subject-info">
+          <div class="subject-name">${s.name}</div>
+          <div class="subject-desc">${s.description||'No description'}</div>
+        </div>
+        <div class="subject-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openSubjectModal('${s.id}')"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="subject-materials">
+        <div class="subject-materials-header">
+          <span class="subject-materials-title">Materials (${mats.length})</span>
+          <button class="btn btn-ghost btn-sm" onclick="openMaterialModal('${s.id}')"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        ${mats.length
+          ? mats.map(m => `
+            <div class="material-item">
+              <span class="type-badge badge-${m.type}">${m.type}</span>
+              <span class="material-title">${m.title}</span>
+              ${m.url ? `<a href="${m.url}" target="_blank" style="color:var(--accent);font-size:0.75rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+              <div style="display:flex;gap:0.3rem;">
+                <button class="btn btn-ghost btn-sm" onclick="openMaterialModal('${s.id}','${m.id}')"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>`).join('')
+          : '<div class="no-materials">No materials yet</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openSubjectModal(id = null) {
+  document.getElementById('subjectModalTitle').textContent = id ? 'Edit Subject' : 'Add Subject';
+  document.getElementById('subjectId').value = id || '';
+  if (id) {
+    const s = subjects.find(s => s.id === id);
+    document.getElementById('subjectName').value      = s.name || '';
+    document.getElementById('subjectIcon').value      = s.icon || '';
+    document.getElementById('subjectColor').value     = s.color || '#9d6a47';
+    document.getElementById('subjectColorText').value = s.color || '#9d6a47';
+    document.getElementById('subjectOrder').value     = s.display_order || 0;
+    document.getElementById('subjectDesc').value      = s.description || '';
+  } else {
+    document.getElementById('subjectName').value      = '';
+    document.getElementById('subjectIcon').value      = '📚';
+    document.getElementById('subjectColor').value     = '#9d6a47';
+    document.getElementById('subjectColorText').value = '#9d6a47';
+    document.getElementById('subjectOrder').value     = subjects.length + 1;
+    document.getElementById('subjectDesc').value      = '';
+  }
+  document.getElementById('subjectModal').classList.add('open');
+}
+
+async function saveSubject() {
+  const id = document.getElementById('subjectId').value;
+  const payload = {
+    school_year_id: schoolYearDocId,
+    name:           document.getElementById('subjectName').value.trim(),
+    icon:           document.getElementById('subjectIcon').value.trim(),
+    color:          document.getElementById('subjectColorText').value.trim() || document.getElementById('subjectColor').value,
+    display_order:  parseInt(document.getElementById('subjectOrder').value) || 0,
+    description:    document.getElementById('subjectDesc').value.trim(),
+    updated_at:     firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if (!payload.name) { toast('Subject name is required', 'error'); return; }
+  try {
+    if (id) {
+      await db.collection('subjects').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('subjects').add(payload);
+    }
+    toast(id ? 'Subject updated!' : 'Subject added!', 'success');
+    closeModal('subjectModal');
+    await loadSubjects(); await loadMaterials();
+    renderSubjectsGrid(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteSubject(id) {
+  if (!confirm('Delete this subject and all its materials?')) return;
+  try {
+    // Delete all materials for this subject first
+    const matSnap = await db.collection('materials').where('subject_id','==',id).get();
+    const batch = db.batch();
+    matSnap.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(db.collection('subjects').doc(id));
+    await batch.commit();
+    toast('Subject deleted', 'success');
+    await loadSubjects(); await loadMaterials();
+    renderSubjectsGrid(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+document.getElementById('subjectColor').addEventListener('input', e => {
+  document.getElementById('subjectColorText').value = e.target.value;
+});
+document.getElementById('subjectColorText').addEventListener('input', e => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('subjectColor').value = e.target.value;
+});
+
+// ── MATERIALS ──
+function openMaterialModal(subjectId = null, materialId = null) {
+  document.getElementById('materialModalTitle').textContent = materialId ? 'Edit Material' : 'Add Material';
+  document.getElementById('materialId').value = materialId || '';
+  const sel = document.getElementById('materialSubjectSelect');
+  sel.innerHTML = subjects.map(s => `<option value="${s.id}" ${s.id===subjectId?'selected':''}>${s.icon} ${s.name}</option>`).join('');
+  if (materialId) {
+    const m = materials.find(m => m.id === materialId);
+    document.getElementById('materialTitle').value = m.title || '';
+    document.getElementById('materialType').value  = m.type  || 'book';
+    document.getElementById('materialUrl').value   = m.url   || '';
+    document.getElementById('materialNotes').value = m.notes || '';
+    sel.value = m.subject_id;
+  } else {
+    document.getElementById('materialTitle').value = '';
+    document.getElementById('materialType').value  = 'book';
+    document.getElementById('materialUrl').value   = '';
+    document.getElementById('materialNotes').value = '';
+  }
+  document.getElementById('materialModal').classList.add('open');
+}
+
+async function saveMaterial() {
+  const id = document.getElementById('materialId').value;
+  const payload = {
+    subject_id: document.getElementById('materialSubjectSelect').value,
+    title:  document.getElementById('materialTitle').value.trim(),
+    type:   document.getElementById('materialType').value,
+    url:    document.getElementById('materialUrl').value.trim() || null,
+    notes:  document.getElementById('materialNotes').value.trim() || null,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if (!payload.title)      { toast('Title is required', 'error'); return; }
+  if (!payload.subject_id) { toast('Select a subject', 'error'); return; }
+  try {
+    if (id) {
+      await db.collection('materials').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('materials').add(payload);
+    }
+    toast(id ? 'Material updated!' : 'Material added!', 'success');
+    closeModal('materialModal');
+    await loadMaterials();
+    renderSubjectsGrid(); renderMaterialsPanel(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteMaterial(id) {
+  if (!confirm('Delete this material?')) return;
+  try {
+    await db.collection('materials').doc(id).delete();
+    toast('Material deleted', 'success');
+    await loadMaterials();
+    renderSubjectsGrid(); renderMaterialsPanel(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function populateMatFilter() {
+  const sel = document.getElementById('matFilterSubject');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Subjects</option>' +
+    subjects.map(s => `<option value="${s.id}" ${s.id===cur?'selected':''}>${s.icon} ${s.name}</option>`).join('');
+}
+
+function renderMaterialsPanel() {
+  const fSubj = document.getElementById('matFilterSubject').value;
+  const fType = document.getElementById('matFilterType').value;
+  let list = materials;
+  if (fSubj) list = list.filter(m => m.subject_id === fSubj);
+  if (fType) list = list.filter(m => m.type === fType);
+  const el = document.getElementById('materialsList');
+  if (!list.length) { el.innerHTML = '<div style="color:var(--muted);font-style:italic;">No materials found.</div>'; return; }
+  el.innerHTML = `<table class="materials-table">
+    <thead><tr><th>Type</th><th>Title</th><th>Subject</th><th>Link</th><th>Actions</th></tr></thead>
+    <tbody>${list.map(m => {
+      const s = subjects.find(s => s.id === m.subject_id);
+      return `<tr>
+        <td><span class="type-badge badge-${m.type}">${m.type}</span></td>
+        <td><strong>${m.title}</strong>${m.notes?`<br><small style="color:var(--muted)">${m.notes}</small>`:''}</td>
+        <td style="white-space:nowrap;">${s?`${s.icon} ${s.name}`:''}</td>
+        <td>${m.url?`<a href="${m.url}" target="_blank" style="color:var(--accent);font-size:0.82rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}</td>
+        <td><div style="display:flex;gap:0.3rem;">
+          <button class="btn btn-ghost btn-sm" onclick="openMaterialModal('${m.subject_id}','${m.id}')"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+// ── CALENDAR ──
+function renderCalendar() {
+  const label = document.getElementById('calMonthLabel');
+  label.textContent = `${MONTHS[calMonth]} ${calYear}`;
+  const today = new Date();
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvts = calEvents.filter(e => e.event_date === ds);
+    const isToday = today.getDate()===d && today.getMonth()===calMonth && today.getFullYear()===calYear;
+    cells += `<div class="cal-day${isToday?' today':''}" onclick="openEventModal('${ds}')">
+      <div class="cal-day-num">${d}</div>
+      ${dayEvts.slice(0,2).map(e => {
+        const s = subjects.find(s => s.id === e.subject_id);
+        return `<div class="cal-event-dot" style="background:${s?.color||'#9d6a47'}">${e.title}</div>`;
+      }).join('')}
+      ${dayEvts.length>2?`<div style="font-size:0.65rem;color:var(--muted)">+${dayEvts.length-2} more</div>`:''}
+    </div>`;
+  }
+  document.getElementById('calDays').innerHTML = cells;
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function renderEventsList() {
+  const el = document.getElementById('eventsList');
+  if (!calEvents.length) { el.innerHTML = '<div class="no-events">No events yet.</div>'; return; }
+  el.innerHTML = calEvents.map(e => {
+    const s = subjects.find(s => s.id === e.subject_id);
+    const d = new Date(e.event_date + 'T00:00:00');
+    const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    return `
+    <div class="event-list-item">
+      <div class="event-date-badge">${label}</div>
+      <div style="flex:1;">
+        <div class="event-title-text">${e.title}</div>
+        ${e.notes?`<div style="font-size:0.78rem;color:var(--muted)">${e.notes}</div>`:''}
+      </div>
+      ${s?`<span style="font-size:0.75rem;padding:0.2rem 0.5rem;border-radius:20px;background:${s.color}22;color:${s.color};font-weight:700;white-space:nowrap;">${s.icon} ${s.name}</span>`:''}
+      <div style="display:flex;gap:0.3rem;">
+        <button class="btn btn-ghost btn-sm" onclick="openEventModal(null,'${e.id}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openEventModal(dateStr = null, eventId = null) {
+  document.getElementById('eventModalTitle').textContent = eventId ? 'Edit Event' : 'Add Event';
+  document.getElementById('eventId').value = eventId || '';
+  const sel = document.getElementById('eventSubject');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    subjects.map(s => `<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+  if (eventId) {
+    const e = calEvents.find(e => e.id === eventId);
+    document.getElementById('eventTitle').value  = e.title || '';
+    document.getElementById('eventDate').value   = e.event_date || '';
+    document.getElementById('eventNotes').value  = e.notes || '';
+    sel.value = e.subject_id || '';
+  } else {
+    document.getElementById('eventTitle').value  = '';
+    document.getElementById('eventDate').value   = dateStr || '';
+    document.getElementById('eventNotes').value  = '';
+    sel.value = '';
+  }
+  document.getElementById('eventModal').classList.add('open');
+}
+
+async function saveEvent() {
+  const id = document.getElementById('eventId').value;
+  const payload = {
+    school_year_id: schoolYearDocId,
+    title:       document.getElementById('eventTitle').value.trim(),
+    event_date:  document.getElementById('eventDate').value,
+    subject_id:  document.getElementById('eventSubject').value || null,
+    notes:       document.getElementById('eventNotes').value.trim() || null,
+    updated_at:  firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if (!payload.title)      { toast('Event title required', 'error'); return; }
+  if (!payload.event_date) { toast('Date is required', 'error'); return; }
+  try {
+    if (id) {
+      await db.collection('calendar_events').doc(id).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('calendar_events').add(payload);
+    }
+    toast(id ? 'Event updated!' : 'Event added!', 'success');
+    closeModal('eventModal');
+    await loadEvents();
+    renderCalendar(); renderEventsList(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  try {
+    await db.collection('calendar_events').doc(id).delete();
+    toast('Event deleted', 'success');
+    await loadEvents();
+    renderCalendar(); renderEventsList(); updateStats();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── MODALS ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── TOAST ──
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>

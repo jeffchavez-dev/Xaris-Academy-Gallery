@@ -15,6 +15,8 @@ function reveal() {
   }
   
   window.addEventListener("scroll", reveal, {passive: true});
+// Also run on load so elements already in viewport become visible
+window.addEventListener("DOMContentLoaded", reveal);
 
 const images = document.querySelector(".gallery_images")
 

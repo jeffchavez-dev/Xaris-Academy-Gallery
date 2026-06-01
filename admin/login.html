@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Xaris Academy</title>
+  <script src="https://kit.fontawesome.com/59a0f15bbd.js" crossorigin="anonymous"></script>
+  <!-- Firebase compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    :root { --background: #ffedd4; --accent: #9d6a47; --accent-dark: #7a4f30; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--background);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .login-card {
+      background: white; border-radius: 16px;
+      padding: 2.5rem 2rem; width: 100%; max-width: 400px;
+      box-shadow: 0 8px 32px rgba(157,106,71,0.18);
+      border: 1px solid rgba(157,106,71,0.15);
+    }
+    .login-logo {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0.5rem; margin-bottom: 1.8rem;
+    }
+    .login-logo img { width: 72px; }
+    .login-logo h1 {
+      font-family: 'Lucida Handwriting', cursive;
+      color: var(--accent); font-size: 1.3rem; text-align: center;
+    }
+    .login-logo p { color: #888; font-size: 0.85rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block; font-size: 0.82rem; font-weight: 700;
+      color: #555; margin-bottom: 0.35rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-group input {
+      width: 100%; padding: 0.7rem 0.9rem;
+      border: 1.5px solid #e0d4c8; border-radius: 8px;
+      font-size: 0.95rem; outline: none;
+      transition: border-color 0.2s; background: #fdf9f5;
+    }
+    .form-group input:focus { border-color: var(--accent); background: white; }
+    .login-btn {
+      width: 100%; padding: 0.8rem;
+      background: var(--accent); color: white;
+      border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.15s; margin-top: 0.5rem;
+    }
+    .login-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .error-msg {
+      background: #fee2e2; color: #dc2626;
+      border: 1px solid #fca5a5; border-radius: 8px;
+      padding: 0.7rem 0.9rem; font-size: 0.88rem;
+      margin-bottom: 1rem; display: none;
+    }
+    .back-link {
+      display: block; text-align: center;
+      margin-top: 1.5rem; color: var(--accent);
+      text-decoration: none; font-size: 0.88rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .divider { text-align: center; color: #bbb; font-size: 0.8rem; margin: 1.5rem 0 0; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="../Xaris_Logo_updated-removebg-preview.png" alt="Xaris Academy">
+      <h1>Xaris Academy</h1>
+      <p>Admin Dashboard</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@example.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+    </form>
+
+    <div class="divider">Xaris Academy · Admin Only</div>
+    <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Xaris Academy</a>
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    auth.onAuthStateChanged(user => {
+      if (user) window.location.href = 'dashboard.html';
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.textContent = 'Signing in…';
+      btn.disabled = true;
+      errorMsg.style.display = 'none';
+
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        const messages = {
+          'auth/user-not-found':  'No account found with this email.',
+          'auth/wrong-password':  'Incorrect password.',
+          'auth/invalid-email':   'Invalid email address.',
+          'auth/too-many-requests': 'Too many attempts. Please try again later.',
+        };
+        errorMsg.textContent = messages[err.code] || err.message;
+        errorMsg.style.display = 'block';
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

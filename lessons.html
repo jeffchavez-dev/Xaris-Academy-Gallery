@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/59a0f15bbd.js" crossorigin="anonymous"></script>
+    <link type="text/css" rel="stylesheet" href="css/lightgallery.css" />
+    <link type="text/css" rel="stylesheet" href="css/lg-zoom.css" />
+    <link type="text/css" rel="stylesheet" href="css/lg-thumbnail.css" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/Xaris Logo updated.png" type="image/x-icon">
+    <!-- Firebase compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <title>Lessons — Xaris Academy</title>
+    <style>
+        /* Only new styles not covered by style.css */
+        .lesson-meta {
+            text-align: center;
+            padding: 1em 1em 0;
+            color: var(--accent);
+            font-size: 1.1em;
+            font-style: italic;
+        }
+        .subject-collapsible {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: none;
+            text-align: left;
+            outline: none;
+            opacity: 0.9;
+            font-size: .8em;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .subject-collapsible.active {
+            color: var(--primary);
+            opacity: 1;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            background-color: var(--background);
+            border-bottom: 1px solid var(--accent);
+        }
+        .subject-collapsible h3 {
+            margin: 0;
+            text-align: left;
+            font-size: 1em;
+        }
+        .material-list {
+            list-style: none;
+            padding: 1em 2em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1em;
+        }
+        .material-list li {
+            background-color: var(--background);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 0.6em 1em;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .material-list li a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .material-list li a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        .mat-tag {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        /* Calendar */
+        .cal-wrapper {
+            padding: 1em 2em 2em;
+        }
+        .cal-nav-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5em;
+            margin-bottom: 1em;
+        }
+        .cal-nav-row h3 {
+            font-size: 1.5em;
+            min-width: 220px;
+            text-align: center;
+        }
+        .cal-btn {
+            background-color: var(--background);
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 1em;
+            color: var(--accent);
+        }
+        .cal-btn:hover {
+            background-color: var(--accent);
+            color: var(--background);
+        }
+        .cal-view-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            margin-bottom: 1.5em;
+        }
+        .cal-view-btn {
+            background-color: var(--background);
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            padding: 6px 18px;
+            cursor: pointer;
+            font-size: 0.95em;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+        .cal-view-btn.active {
+            background-color: var(--accent);
+            color: var(--background);
+            opacity: 1;
+        }
+        /* Grid calendar */
+        .cal-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cal-grid-table th {
+            text-align: center;
+            padding: 6px;
+            font-size: 0.85em;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--accent);
+        }
+        .cal-grid-table td {
+            vertical-align: top;
+            padding: 4px;
+            min-height: 70px;
+            width: 14.28%;
+            border: 1px solid rgba(157,106,71,0.15);
+            font-size: 0.85em;
+        }
+        .cal-grid-table td.today {
+            background-color: rgba(157,106,71,0.08);
+        }
+        .cal-day-num {
+            font-weight: bold;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 2px;
+        }
+        .cal-evt-chip {
+            display: block;
+            font-size: 0.72em;
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: white;
+            margin-bottom: 2px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        /* List calendar */
+        .cal-list-view {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .cal-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1em;
+            padding: 0.7em 1em;
+            border-bottom: 1px dashed rgba(157,106,71,0.3);
+        }
+        .cal-list-date {
+            min-width: 80px;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 0.95em;
+        }
+        .cal-list-title {
+            flex: 1;
+            font-size: 0.95em;
+        }
+        .cal-subject-tag {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .no-data-msg {
+            text-align: center;
+            color: var(--accent);
+            font-style: italic;
+            padding: 1em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <header class="header">
+        <h1 class="nav-logo">
+            <a href="index.html">
+                <img src="/Xaris_Logo_updated-removebg-preview.png" alt="Xaris Academy Logo" class="nav-logo-img">
+                Xaris Academy
+            </a>
+        </h1>
+        <nav class="nav">
+            <a href="lessons.html" class="links">Lessons</a>
+            <a href="grade-page.html" class="links">Gallery</a>
+        </nav>
+    </header>
+
+    <!-- Page title -->
+    <div style="text-align:center; padding: 1.5em 1em 0;">
+        <h2 id="pageTitle"><i class="fa-solid fa-book-open"></i> Lessons</h2>
+        <p class="lesson-meta" id="lessonMeta">Loading…</p>
+    </div>
+
+    <!-- ══ GOALS ══ -->
+    <div class="quarter reveal">
+        <div class="collapsible">
+            <h2><i class="fa-solid fa-bullseye"></i> Goals</h2>
+        </div>
+        <div class="content">
+            <div style="max-width: 800px; margin: 1.5em auto; padding: 0 1em;">
+                <p id="goalsText" style="font-size: 1.3em; line-height: 1.8; text-align: center; font-style: italic; color: var(--primary);">
+                    Loading…
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ METHODS ══ -->
+    <div class="quarter reveal">
+        <div class="collapsible">
+            <h2><i class="fa-solid fa-lightbulb"></i> Methods</h2>
+        </div>
+        <div class="content">
+            <div style="max-width: 800px; margin: 1.5em auto; padding: 0 1em;">
+                <p id="methodsText" style="font-size: 1.3em; line-height: 1.8; text-align: center; font-style: italic; color: var(--primary);">
+                    Loading…
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ SUBJECTS ══ -->
+    <div class="quarter reveal">
+        <div class="collapsible">
+            <h2><i class="fa-solid fa-graduation-cap"></i> Subjects</h2>
+        </div>
+        <div class="content" id="subjectsContainer">
+            <p class="no-data-msg">Loading subjects…</p>
+        </div>
+    </div>
+
+    <!-- ══ CALENDAR ══ -->
+    <div class="quarter reveal">
+        <div class="collapsible">
+            <h2><i class="fa-solid fa-calendar-days"></i> Calendar</h2>
+        </div>
+        <div class="content">
+            <div class="cal-wrapper">
+                <div class="cal-nav-row">
+                    <button class="cal-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h3 id="calMonthLabel">—</h3>
+                    <button class="cal-btn" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="cal-view-toggle">
+                    <button class="cal-view-btn active" id="btnGrid" onclick="setCalView('grid')"><i class="fa-solid fa-table-cells"></i> Month</button>
+                    <button class="cal-view-btn" id="btnList" onclick="setCalView('list')"><i class="fa-solid fa-list"></i> List</button>
+                </div>
+                <div id="calBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MATERIALS ══ -->
+    <div class="quarter reveal">
+        <div class="collapsible">
+            <h2><i class="fa-solid fa-layer-group"></i> Materials</h2>
+        </div>
+        <div class="content">
+            <div style="padding: 0.5em 1em 0.5em 2em; display:flex; flex-wrap:wrap; gap:0.5em;" id="matFilterRow">
+                <button class="cal-btn active" style="background:var(--accent);color:var(--background);" onclick="filterMaterials('',this)">All</button>
+            </div>
+            <div id="materialsContainer">
+                <p class="no-data-msg">Loading materials…</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-btn"><a href="index.html"><i class="fa-solid fa-house"></i></a></button>
+
+    <footer>
+        <div class="footer-content">Made by Daddy Jeff with 💓</div>
+    </footer>
+
+    <script src="/script.js"></script>
+    <script src="js/lightgallery.min.js"></script>
+    <script src="js/plugins/lg-thumbnail.umd.js"></script>
+    <script src="js/plugins/lg-zoom.umd.js"></script>
+
+    <script>
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const YEAR_KEY = '2026-2027';
+
+    let schoolYearDocId = null;
+    let subjects  = [];
+    let materials = [];
+    let calEvents = [];
+    let calMonth  = new Date().getMonth();
+    let calYear   = new Date().getFullYear();
+    let calView   = 'grid';
+    let matFilter = '';
+
+    async function boot() {
+        await loadSchoolYear();
+        await Promise.all([loadSubjects(), loadEvents()]);
+        await loadMaterials();
+        renderSubjects();
+        renderCalendar();
+        renderMaterials();
+        buildMatFilters();
+    }
+
+    async function loadSchoolYear() {
+        try {
+            const snap = await db.collection('school_years').where('year','==',YEAR_KEY).limit(1).get();
+            if (snap.empty) { setFallbackText(); return; }
+            const doc = snap.docs[0];
+            schoolYearDocId = doc.id;
+            const d = doc.data();
+            document.getElementById('pageTitle').innerHTML = `<i class="fa-solid fa-book-open"></i> ${d.grade || 'Grade 2'} Lessons`;
+            document.getElementById('lessonMeta').textContent = `S.Y. ${d.year} · ${d.student_name || 'Myrrh'}`;
+            document.getElementById('goalsText').textContent   = d.goals   || 'Goals coming soon.';
+            document.getElementById('methodsText').textContent = d.methods || 'Methods coming soon.';
+        } catch(e) { setFallbackText(); }
+    }
+
+    function setFallbackText() {
+        document.getElementById('lessonMeta').textContent   = 'S.Y. 2026–2027 · Myrrh';
+        document.getElementById('goalsText').textContent    = 'Goals coming soon.';
+        document.getElementById('methodsText').textContent  = 'Methods coming soon.';
+    }
+
+    async function loadSubjects() {
+        if (!schoolYearDocId) return;
+        try {
+            const snap = await db.collection('subjects').where('school_year_id','==',schoolYearDocId).get();
+            subjects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            subjects.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+        } catch(e) {}
+    }
+
+    async function loadMaterials() {
+        if (!subjects.length) return;
+        try {
+            const ids = subjects.map(s => s.id);
+            materials = [];
+            for (let i = 0; i < ids.length; i += 30) {
+                const chunk = ids.slice(i, i+30);
+                const snap = await db.collection('materials').where('subject_id','in',chunk).get();
+                materials.push(...snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            }
+            materials.sort((a,b) => (a.display_order||0) - (b.display_order||0));
+        } catch(e) {}
+    }
+
+    async function loadEvents() {
+        if (!schoolYearDocId) return;
+        try {
+            const snap = await db.collection('calendar_events').where('school_year_id','==',schoolYearDocId).get();
+            calEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            calEvents.sort((a,b) => a.event_date.localeCompare(b.event_date));
+        } catch(e) {}
+    }
+
+    // SUBJECTS — each subject is a nested collapsible inside the Subjects section
+    function renderSubjects() {
+        const container = document.getElementById('subjectsContainer');
+        if (!subjects.length) {
+            container.innerHTML = '<p class="no-data-msg">Subjects coming soon.</p>';
+            return;
+        }
+        container.innerHTML = subjects.map(s => {
+            const mats = materials.filter(m => m.subject_id === s.id);
+            return `
+            <div class="quarter" style="margin: 0.5em 1em;">
+                <div class="subject-collapsible collapsible">
+                    <span style="font-size:1.5em;">${s.icon || '📚'}</span>
+                    <h3>${s.name}</h3>
+                </div>
+                <div class="content" style="display:none;">
+                    ${s.description ? `<p style="font-size:1.1em; line-height:1.7; padding: 1em 2em; font-style:italic; color:var(--primary);">${s.description}</p>` : ''}
+                    ${mats.length ? `
+                        <p style="text-align:center; color:var(--accent); font-size:0.9em; text-transform:uppercase; letter-spacing:0.08em; margin: 0.5em 0;">Materials</p>
+                        <ul class="material-list">
+                            ${mats.map(m => `
+                            <li>
+                                <span class="mat-tag">${m.type}</span>
+                                ${m.url
+                                    ? `<a href="${m.url}" target="_blank" rel="noopener">${m.title}</a>`
+                                    : `<span>${m.title}</span>`}
+                                ${m.notes ? `<small style="color:var(--accent); opacity:0.7;">— ${m.notes}</small>` : ''}
+                            </li>`).join('')}
+                        </ul>` : '<p class="no-data-msg" style="padding:0.5em 2em;">No materials added yet.</p>'}
+                </div>
+            </div>`;
+        }).join('');
+
+        // Re-bind collapsible for subject sub-sections
+        container.querySelectorAll('.collapsible').forEach(el => {
+            el.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+    }
+
+    // CALENDAR
+    function renderCalendar() {
+        document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
+        calView === 'grid' ? renderCalGrid() : renderCalList();
+    }
+
+    function renderCalGrid() {
+        const today = new Date();
+        const firstDay = new Date(calYear, calMonth, 1).getDay();
+        const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+        let rows = '<tr>';
+        for (let i = 0; i < firstDay; i++) rows += '<td></td>';
+        let col = firstDay;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayEvts = calEvents.filter(e => e.event_date === ds);
+            const isToday = today.getDate()===d && today.getMonth()===calMonth && today.getFullYear()===calYear;
+            rows += `<td${isToday?' class="today"':''}>
+                <span class="cal-day-num">${d}</span>
+                ${dayEvts.slice(0,2).map(e => {
+                    const s = subjects.find(s => s.id === e.subject_id);
+                    return `<span class="cal-evt-chip" style="background:${s?.color||'var(--accent)'}" title="${e.title}">${e.title}</span>`;
+                }).join('')}
+                ${dayEvts.length>2?`<span style="font-size:0.68em;color:var(--accent);">+${dayEvts.length-2} more</span>`:''}
+            </td>`;
+            col++;
+            if (col % 7 === 0 && d < daysInMonth) rows += '</tr><tr>';
+        }
+        while (col % 7 !== 0) { rows += '<td></td>'; col++; }
+        rows += '</tr>';
+        document.getElementById('calBody').innerHTML = `
+            <table class="cal-grid-table">
+                <thead><tr>
+                    <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+    }
+
+    function renderCalList() {
+        const filtered = calEvents.filter(e => {
+            const d = new Date(e.event_date + 'T00:00:00');
+            return d.getFullYear()===calYear && d.getMonth()===calMonth;
+        });
+        if (!filtered.length) {
+            document.getElementById('calBody').innerHTML = '<p class="no-data-msg">No events this month.</p>';
+            return;
+        }
+        document.getElementById('calBody').innerHTML = `<div class="cal-list-view">${
+            filtered.map(e => {
+                const d = new Date(e.event_date + 'T00:00:00');
+                const s = subjects.find(s => s.id === e.subject_id);
+                return `
+                <div class="cal-list-item">
+                    <span class="cal-list-date">${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}</span>
+                    <span class="cal-list-title">${e.title}${e.notes?` <small style="opacity:0.6;">— ${e.notes}</small>`:''}</span>
+                    ${s?`<span class="cal-subject-tag" style="background:${s.color}">${s.icon} ${s.name}</span>`:''}
+                </div>`;
+            }).join('')
+        }</div>`;
+    }
+
+    function changeMonth(dir) {
+        calMonth += dir;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        if (calMonth < 0)  { calMonth = 11; calYear--; }
+        renderCalendar();
+    }
+
+    function setCalView(v) {
+        calView = v;
+        document.getElementById('btnGrid').classList.toggle('active', v==='grid');
+        document.getElementById('btnList').classList.toggle('active', v==='list');
+        renderCalendar();
+    }
+
+    // MATERIALS
+    function buildMatFilters() {
+        if (!subjects.length) return;
+        const row = document.getElementById('matFilterRow');
+        row.innerHTML = `<button class="cal-btn" style="background:var(--accent);color:var(--background);" onclick="filterMaterials('',this)">All</button>` +
+            subjects.map(s => `<button class="cal-btn" onclick="filterMaterials('${s.id}',this)">${s.icon} ${s.name}</button>`).join('');
+    }
+
+    function filterMaterials(subjectId, btn) {
+        matFilter = subjectId;
+        document.querySelectorAll('#matFilterRow .cal-btn').forEach(b => {
+            b.style.background = '';
+            b.style.color = '';
+        });
+        btn.style.background = 'var(--accent)';
+        btn.style.color = 'var(--background)';
+        renderMaterials();
+    }
+
+    function renderMaterials() {
+        const filtered = matFilter ? materials.filter(m => m.subject_id===matFilter) : materials;
+        const container = document.getElementById('materialsContainer');
+        if (!filtered.length) {
+            container.innerHTML = '<p class="no-data-msg">No materials yet.</p>';
+            return;
+        }
+        container.innerHTML = `<ul class="material-list">${
+            filtered.map(m => {
+                const s = subjects.find(s => s.id===m.subject_id);
+                return `
+                <li>
+                    <span class="mat-tag">${m.type}</span>
+                    ${m.url
+                        ? `<a href="${m.url}" target="_blank" rel="noopener">${m.title}</a>`
+                        : `<span>${m.title}</span>`}
+                    ${s ? `<small style="color:var(--accent);opacity:0.8;">${s.icon} ${s.name}</small>` : ''}
+                    ${m.notes ? `<small style="opacity:0.6;">— ${m.notes}</small>` : ''}
+                </li>`;
+            }).join('')
+        }</ul>`;
+    }
+
+    boot();
+    </script>
+</body>
+</html>

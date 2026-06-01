@@ -366,6 +366,11 @@ footer {
     font-size: 1.5em;
     opacity: .8;
     padding: 10px;
+    text-decoration: none;
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
