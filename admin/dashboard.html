@@ -167,6 +167,22 @@
     .materials-table td { padding: 0.6rem 0.7rem; border-bottom: 1px solid #f0e8e0; font-size: 0.88rem; vertical-align: middle; }
     .materials-table tr:last-child td { border-bottom: none; }
 
+    /* YEAR FILTER BAR */
+    .year-filter-bar {
+      display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+      background: var(--accent-light); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.6rem 1rem; margin-bottom: 1.2rem;
+    }
+    .year-filter-select {
+      padding: 0.3rem 0.65rem; border: 1.5px solid var(--border); border-radius: 6px;
+      font-size: 0.88rem; background: white; outline: none; font-weight: 600;
+      color: var(--accent); cursor: pointer;
+    }
+    .year-filter-select:focus { border-color: var(--accent); }
+    .year-filter-count {
+      font-size: 0.75rem; color: var(--muted); margin-left: auto;
+    }
+
     /* SCHEDULE */
     .sch-header { background:var(--accent); color:white; border-radius:7px; padding:0.5rem; text-align:center; font-size:0.8rem; font-weight:700; }
     .sch-time-label { display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:0.72rem; color:var(--muted); font-weight:600; }
@@ -303,6 +319,12 @@
       <div class="panel-title">Subjects <span>&amp; Materials</span></div>
       <button class="btn btn-primary" onclick="openSubjectModal()"><i class="fa-solid fa-plus"></i> Add Subject</button>
     </div>
+    <div class="year-filter-bar">
+      <i class="fa-solid fa-graduation-cap" style="color:var(--accent);"></i>
+      <span style="font-size:0.82rem;color:var(--muted);font-weight:600;">School Year:</span>
+      <select class="year-filter-select" id="subjectsYearFilter" onchange="switchPanelYear('subjects', this.value)"></select>
+      <span id="subjectsYearCount" class="year-filter-count"></span>
+    </div>
     <div class="subjects-grid" id="subjectsGrid">
       <div style="color:var(--muted);font-style:italic;">Loading subjects…</div>
     </div>
@@ -313,6 +335,12 @@
     <div class="panel-header">
       <div class="panel-title">Materials <span>Library</span></div>
       <button class="btn btn-primary" onclick="openMaterialModal(null)"><i class="fa-solid fa-plus"></i> Add Material</button>
+    </div>
+    <div class="year-filter-bar">
+      <i class="fa-solid fa-graduation-cap" style="color:var(--accent);"></i>
+      <span style="font-size:0.82rem;color:var(--muted);font-weight:600;">School Year:</span>
+      <select class="year-filter-select" id="materialsYearFilter" onchange="switchPanelYear('materials', this.value)"></select>
+      <span id="materialsYearCount" class="year-filter-count"></span>
     </div>
     <div class="card">
       <div style="display:flex;gap:0.7rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
@@ -409,6 +437,12 @@
     <div class="panel-header">
       <div class="panel-title">Calendar <span>Events</span></div>
       <button class="btn btn-primary" onclick="openEventModal()"><i class="fa-solid fa-calendar-plus"></i> Add Event</button>
+    </div>
+    <div class="year-filter-bar">
+      <i class="fa-solid fa-graduation-cap" style="color:var(--accent);"></i>
+      <span style="font-size:0.82rem;color:var(--muted);font-weight:600;">School Year:</span>
+      <select class="year-filter-select" id="calendarYearFilter" onchange="switchPanelYear('calendar', this.value)"></select>
+      <span id="calendarYearCount" class="year-filter-count"></span>
     </div>
     <div style="margin-bottom:1.2rem;">
       <div class="cal-nav">
@@ -709,6 +743,7 @@ async function loadAll() {
   renderMaterialsPanel();
   renderCalendar();
   renderEventsList();
+  populatePanelYearFilters();
 }
 
 async function loadAllSchoolYears() {
@@ -754,6 +789,7 @@ async function switchActiveYear(id) {
   renderSchoolYearsList();
   await loadSubjects(); await loadMaterials(); await loadEvents(); await loadSchedule();
   updateStats(); renderSubjectsGrid(); renderMaterialsPanel(); renderCalendar(); renderEventsList();
+  populatePanelYearFilters();
 }
 
 function renderSchoolYearsList() {
@@ -854,6 +890,47 @@ function updateStats() {
   document.getElementById('statSubjects').textContent  = subjects.length;
   document.getElementById('statMaterials').textContent = materials.length;
   document.getElementById('statEvents').textContent    = calEvents.length;
+  updatePanelCounts();
+}
+
+// ── YEAR FILTER BARS ──
+function populatePanelYearFilters() {
+  ['subjects','materials','calendar'].forEach(panel => {
+    const sel = document.getElementById(`${panel}YearFilter`);
+    if (!sel) return;
+    const cur = sel.value || schoolYearDocId;
+    sel.innerHTML = schoolYears.map(y =>
+      `<option value="${y.id}" ${y.id === cur ? 'selected' : ''}>${y.grade} · ${y.year}</option>`
+    ).join('');
+  });
+  updatePanelCounts();
+}
+
+function updatePanelCounts() {
+  const subEl = document.getElementById('subjectsYearCount');
+  const matEl = document.getElementById('materialsYearCount');
+  const calEl = document.getElementById('calendarYearCount');
+  if (subEl) subEl.textContent = `${subjects.length} subject${subjects.length !== 1 ? 's' : ''}`;
+  if (matEl) matEl.textContent = `${materials.length} material${materials.length !== 1 ? 's' : ''}`;
+  if (calEl) calEl.textContent = `${calEvents.length} event${calEvents.length !== 1 ? 's' : ''}`;
+}
+
+async function switchPanelYear(panel, yearId) {
+  if (!yearId || yearId === schoolYearDocId) return;
+  // Sync all year filter selects to the same value
+  schoolYearDocId = yearId;
+  ['subjects','materials','calendar'].forEach(p => {
+    const sel = document.getElementById(`${p}YearFilter`);
+    if (sel) sel.value = yearId;
+  });
+  const sel = document.getElementById('activeYearSelect');
+  if (sel) sel.value = yearId;
+  const y = schoolYears.find(y => y.id === yearId);
+  if (y) document.getElementById('overviewYear').textContent = `${y.grade} · ${y.year}`;
+  renderSchoolYearsList();
+  await loadSubjects(); await loadMaterials(); await loadEvents(); await loadSchedule();
+  updateStats(); renderSubjectsGrid(); renderMaterialsPanel();
+  populateMatFilter(); renderCalendar(); renderEventsList(); updatePanelCounts();
 }
 
 // ── NAV ──
@@ -865,6 +942,7 @@ function switchPanel(id, btn) {
   if (id === 'materials') populateMatFilter();
   if (id === 'schoolyear') { renderSchoolYearsList(); populateSyGallerySelect(schoolYears.find(y=>y.id===schoolYearDocId)?.gallery_grade_id||''); }
   if (id === 'schedule') renderSchedule();
+  if (['subjects','materials','calendar'].includes(id)) { populatePanelYearFilters(); }
   if (window.innerWidth < 769) document.getElementById('sidebar').classList.remove('open');
 }
 
