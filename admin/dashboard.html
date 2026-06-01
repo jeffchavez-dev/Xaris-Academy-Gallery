@@ -219,7 +219,19 @@
       <div class="panel-title">Dashboard <span>Overview</span></div>
       <div class="year-badge" id="overviewYear">Loading…</div>
     </div>
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <label style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);display:block;margin-bottom:0.35rem;">Active School Year</label>
+          <select id="activeYearSelect" onchange="switchActiveYear(this.value)" style="width:100%;padding:0.6rem 0.8rem;border:1.5px solid var(--border);border-radius:7px;font-size:0.92rem;background:#fdf9f5;outline:none;font-weight:600;">
+            <option>Loading…</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:1.4rem;" onclick="switchPanel('schoolyear',document.querySelectorAll('.nav-item')[1])"><i class="fa-solid fa-graduation-cap"></i> Manage Years</button>
+      </div>
+    </div>
     <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statYears">—</div><div class="stat-label">School Years</div></div>
       <div class="stat-card"><div class="stat-num" id="statSubjects">—</div><div class="stat-label">Subjects</div></div>
       <div class="stat-card"><div class="stat-num" id="statMaterials">—</div><div class="stat-label">Materials</div></div>
       <div class="stat-card"><div class="stat-num" id="statEvents">—</div><div class="stat-label">Calendar Events</div></div>
@@ -238,24 +250,37 @@
   <!-- SCHOOL YEAR -->
   <div class="panel" id="panel-schoolyear">
     <div class="panel-header">
-      <div class="panel-title">School Year <span>Settings</span></div>
-      <button class="btn btn-primary" onclick="saveSchoolYear()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+      <div class="panel-title">School Years <span>Archive</span></div>
+      <button class="btn btn-primary" onclick="openNewYearForm()"><i class="fa-solid fa-plus"></i> Add School Year</button>
     </div>
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-school"></i> Year Info</div>
+    <!-- Year cards list -->
+    <div id="schoolYearsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-bottom:1.5rem;">
+      <div style="color:var(--muted);font-style:italic;">Loading…</div>
+    </div>
+    <!-- Edit / Add form -->
+    <div id="syEditCard" class="card" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <div class="card-title" style="margin:0;"><i class="fa-solid fa-pen"></i> <span id="syEditTitle">School Year Details</span></div>
+        <div style="display:flex;gap:0.5rem;">
+          <button class="btn btn-danger btn-sm" id="syDeleteBtn" onclick="deleteSchoolYear()" style="display:none;"><i class="fa-solid fa-trash"></i> Delete</button>
+          <button class="btn btn-primary" onclick="saveSchoolYear()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        </div>
+      </div>
+      <input type="hidden" id="syId">
       <div class="form-row">
         <div class="form-group"><label>School Year</label><input id="syYear" placeholder="e.g. 2026-2027"></div>
         <div class="form-group"><label>Grade Level</label><input id="syGrade" placeholder="e.g. Grade 2"></div>
       </div>
-      <div class="form-group"><label>Student Name</label><input id="syStudent" placeholder="e.g. Myrrh"></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-bullseye"></i> Goals</div>
-      <div class="form-group"><textarea id="syGoals" rows="5" placeholder="Enter goals for this school year…"></textarea></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-lightbulb"></i> Methods</div>
-      <div class="form-group"><textarea id="syMethods" rows="5" placeholder="Describe teaching methods and approach…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Student Name</label><input id="syStudent" placeholder="e.g. Myrrh"></div>
+        <div class="form-group">
+          <label>Linked Gallery Grade</label>
+          <select id="syGalleryGrade"><option value="">— None —</option></select>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Links this year to its gallery page</div>
+        </div>
+      </div>
+      <div class="form-group"><label>Goals</label><textarea id="syGoals" rows="4" placeholder="Goals for this school year…"></textarea></div>
+      <div class="form-group"><label>Methods</label><textarea id="syMethods" rows="4" placeholder="Teaching methods and approach…"></textarea></div>
     </div>
   </div>
 
@@ -454,6 +479,10 @@
         <input id="gradeCoverImage" placeholder="/assets/grade-two/cover.jpg or https://…">
         <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Shown as the thumbnail card on the Gallery page</div>
       </div>
+      <div class="form-group">
+        <label>Linked School Year (optional)</label>
+        <select id="gradeSchoolYear"><option value="">— None —</option></select>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
@@ -565,14 +594,14 @@
 
 <script>
 // ── STATE ──
-let schoolYearDocId = null;
+let schoolYears = [];
+let schoolYearDocId = null; // ID of currently active year
 let subjects = [];
 let materials = [];
 let calEvents = [];
 let calMonth = new Date().getMonth();
 let calYear  = new Date().getFullYear();
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const YEAR_KEY = '2026-2027';
 
 // ── AUTH GUARD ──
 auth.onAuthStateChanged(async user => {
@@ -588,7 +617,7 @@ async function logout() {
 
 // ── LOAD ──
 async function loadAll() {
-  await loadSchoolYear();
+  await loadAllSchoolYears();
   await loadSubjects();
   await loadMaterials();
   await loadEvents();
@@ -600,26 +629,113 @@ async function loadAll() {
   renderEventsList();
 }
 
-async function loadSchoolYear() {
-  const snap = await db.collection('school_years').where('year','==', YEAR_KEY).limit(1).get();
-  if (snap.empty) {
-    // Create it if it doesn't exist
+async function loadAllSchoolYears() {
+  const snap = await db.collection('school_years').get();
+  schoolYears = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Sort: most recent year string first
+  schoolYears.sort((a,b) => (b.year||'').localeCompare(a.year||''));
+
+  // Pick active year: keep current selection if still valid, else use first
+  if (!schoolYearDocId || !schoolYears.find(y => y.id === schoolYearDocId)) {
+    schoolYearDocId = schoolYears.length ? schoolYears[0].id : null;
+  }
+
+  // If no years exist at all, create a default one
+  if (!schoolYears.length) {
     const ref = await db.collection('school_years').add({
       year: '2026-2027', grade: 'Grade 2', student_name: 'Myrrh',
-      goals: '', methods: '', created_at: firebase.firestore.FieldValue.serverTimestamp()
+      goals: '', methods: '', gallery_grade_id: '',
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
     });
+    schoolYears = [{ id: ref.id, year: '2026-2027', grade: 'Grade 2', student_name: 'Myrrh', goals: '', methods: '' }];
     schoolYearDocId = ref.id;
+  }
+
+  renderSchoolYearsList();
+  populateActiveYearSelect();
+  const active = schoolYears.find(y => y.id === schoolYearDocId);
+  if (active) document.getElementById('overviewYear').textContent = `${active.grade} · ${active.year}`;
+}
+
+function populateActiveYearSelect() {
+  const sel = document.getElementById('activeYearSelect');
+  sel.innerHTML = schoolYears.map(y =>
+    `<option value="${y.id}" ${y.id===schoolYearDocId?'selected':''}>${y.grade} · ${y.year}</option>`
+  ).join('');
+}
+
+async function switchActiveYear(id) {
+  if (!id || id === schoolYearDocId) return;
+  schoolYearDocId = id;
+  const y = schoolYears.find(y => y.id === id);
+  if (y) document.getElementById('overviewYear').textContent = `${y.grade} · ${y.year}`;
+  renderSchoolYearsList();
+  await loadSubjects(); await loadMaterials(); await loadEvents();
+  updateStats(); renderSubjectsGrid(); renderMaterialsPanel(); renderCalendar(); renderEventsList();
+}
+
+function renderSchoolYearsList() {
+  const el = document.getElementById('schoolYearsList');
+  if (!el) return;
+  if (!schoolYears.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-style:italic;">No school years yet.</div>';
     return;
   }
-  const doc = snap.docs[0];
-  schoolYearDocId = doc.id;
-  const d = doc.data();
-  document.getElementById('syYear').value    = d.year || '';
-  document.getElementById('syGrade').value   = d.grade || '';
-  document.getElementById('syStudent').value = d.student_name || '';
-  document.getElementById('syGoals').value   = d.goals || '';
-  document.getElementById('syMethods').value = d.methods || '';
-  document.getElementById('overviewYear').textContent = `${d.grade} · ${d.year}`;
+  el.innerHTML = schoolYears.map(y => {
+    const isActive = y.id === schoolYearDocId;
+    const linked = y.gallery_grade_id ? galleryGrades.find(g => g.id === y.gallery_grade_id) : null;
+    return `
+    <div onclick="selectSchoolYear('${y.id}')" style="background:white;border-radius:var(--radius);padding:1.1rem;border:${isActive?'2px solid var(--accent)':'1.5px solid var(--border)'};box-shadow:0 2px 8px rgba(157,106,71,0.07);cursor:pointer;transition:border 0.15s;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
+        <div>
+          <div style="font-weight:700;font-size:1rem;">${y.grade || 'Unknown Grade'}</div>
+          <div style="color:var(--muted);font-size:0.85rem;margin-top:0.1rem;">${y.year || ''}</div>
+          ${y.student_name ? `<div style="font-size:0.78rem;margin-top:0.3rem;">👤 ${y.student_name}</div>` : ''}
+          ${linked ? `<div style="font-size:0.75rem;margin-top:0.3rem;color:var(--accent);"><i class="fa-solid fa-images"></i> ${linked.name}</div>` : ''}
+        </div>
+        ${isActive ? `<span class="year-badge" style="flex-shrink:0;">Active</span>` : ''}
+      </div>
+      ${y.goals ? `<div style="font-size:0.75rem;color:var(--muted);margin-top:0.6rem;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${y.goals}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openNewYearForm() {
+  document.getElementById('syId').value = '';
+  document.getElementById('syYear').value = '';
+  document.getElementById('syGrade').value = '';
+  document.getElementById('syStudent').value = '';
+  document.getElementById('syGoals').value = '';
+  document.getElementById('syMethods').value = '';
+  document.getElementById('syEditTitle').textContent = 'New School Year';
+  document.getElementById('syDeleteBtn').style.display = 'none';
+  populateSyGallerySelect('');
+  document.getElementById('syEditCard').style.display = 'block';
+  document.getElementById('syEditCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function selectSchoolYear(id) {
+  const y = schoolYears.find(y => y.id === id);
+  if (!y) return;
+  document.getElementById('syId').value = id;
+  document.getElementById('syYear').value = y.year || '';
+  document.getElementById('syGrade').value = y.grade || '';
+  document.getElementById('syStudent').value = y.student_name || '';
+  document.getElementById('syGoals').value = y.goals || '';
+  document.getElementById('syMethods').value = y.methods || '';
+  document.getElementById('syEditTitle').textContent = `${y.grade} · ${y.year}`;
+  document.getElementById('syDeleteBtn').style.display = 'inline-flex';
+  populateSyGallerySelect(y.gallery_grade_id || '');
+  document.getElementById('syEditCard').style.display = 'block';
+  document.getElementById('syEditCard').scrollIntoView({ behavior: 'smooth' });
+  // Also switch active year
+  if (id !== schoolYearDocId) switchActiveYear(id);
+}
+
+function populateSyGallerySelect(selectedId) {
+  const sel = document.getElementById('syGalleryGrade');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    galleryGrades.map(g => `<option value="${g.id}" ${g.id===selectedId?'selected':''}>${g.name}</option>`).join('');
 }
 
 async function loadSubjects() {
@@ -652,6 +768,7 @@ async function loadEvents() {
 
 // ── STATS ──
 function updateStats() {
+  document.getElementById('statYears').textContent     = schoolYears.length;
   document.getElementById('statSubjects').textContent  = subjects.length;
   document.getElementById('statMaterials').textContent = materials.length;
   document.getElementById('statEvents').textContent    = calEvents.length;
@@ -664,29 +781,74 @@ function switchPanel(id, btn) {
   document.getElementById('panel-' + id).classList.add('active');
   btn.classList.add('active');
   if (id === 'materials') populateMatFilter();
+  if (id === 'schoolyear') { renderSchoolYearsList(); populateSyGallerySelect(schoolYears.find(y=>y.id===schoolYearDocId)?.gallery_grade_id||''); }
   if (window.innerWidth < 769) document.getElementById('sidebar').classList.remove('open');
 }
 
 // ── SCHOOL YEAR ──
 async function saveSchoolYear() {
+  const id = document.getElementById('syId').value;
   const payload = {
-    year:         document.getElementById('syYear').value.trim(),
-    grade:        document.getElementById('syGrade').value.trim(),
-    student_name: document.getElementById('syStudent').value.trim(),
-    goals:        document.getElementById('syGoals').value.trim(),
-    methods:      document.getElementById('syMethods').value.trim(),
-    updated_at:   firebase.firestore.FieldValue.serverTimestamp(),
+    year:             document.getElementById('syYear').value.trim(),
+    grade:            document.getElementById('syGrade').value.trim(),
+    student_name:     document.getElementById('syStudent').value.trim(),
+    goals:            document.getElementById('syGoals').value.trim(),
+    methods:          document.getElementById('syMethods').value.trim(),
+    gallery_grade_id: document.getElementById('syGalleryGrade').value || '',
+    updated_at:       firebase.firestore.FieldValue.serverTimestamp(),
   };
+  if (!payload.year || !payload.grade) { toast('Year and grade are required', 'error'); return; }
   try {
-    if (schoolYearDocId) {
-      await db.collection('school_years').doc(schoolYearDocId).update(payload);
+    if (id) {
+      await db.collection('school_years').doc(id).update(payload);
+      schoolYearDocId = id;
     } else {
-      const ref = await db.collection('school_years').add({ ...payload, created_at: firebase.firestore.FieldValue.serverTimestamp() });
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection('school_years').add(payload);
       schoolYearDocId = ref.id;
+      document.getElementById('syId').value = ref.id;
+      document.getElementById('syDeleteBtn').style.display = 'inline-flex';
     }
     toast('School year saved!', 'success');
     document.getElementById('overviewYear').textContent = `${payload.grade} · ${payload.year}`;
+    await loadAllSchoolYears();
+    populateActiveYearSelect();
+    document.getElementById('activeYearSelect').value = schoolYearDocId;
   } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteSchoolYear() {
+  const id = document.getElementById('syId').value;
+  if (!id) return;
+  const y = schoolYears.find(y => y.id === id);
+  if (!confirm(`Delete "${y?.grade} · ${y?.year}"? Subjects, materials, and calendar events for this year will also be deleted.`)) return;
+  try {
+    // Delete all subjects (and their materials) for this year
+    const subSnap = await db.collection('subjects').where('school_year_id','==',id).get();
+    const subIds = subSnap.docs.map(d => d.id);
+    const batch = db.batch();
+    subSnap.docs.forEach(d => batch.delete(d.ref));
+    if (subIds.length) {
+      for (let i = 0; i < subIds.length; i += 30) {
+        const chunk = subIds.slice(i,i+30);
+        const matSnap = await db.collection('materials').where('subject_id','in',chunk).get();
+        matSnap.docs.forEach(d => batch.delete(d.ref));
+      }
+    }
+    // Delete calendar events
+    const evtSnap = await db.collection('calendar_events').where('school_year_id','==',id).get();
+    evtSnap.docs.forEach(d => batch.delete(d.ref));
+    // Delete the year doc
+    batch.delete(db.collection('school_years').doc(id));
+    await batch.commit();
+    toast('School year deleted', 'success');
+    document.getElementById('syEditCard').style.display = 'none';
+    document.getElementById('syId').value = '';
+    if (schoolYearDocId === id) schoolYearDocId = null;
+    await loadAllSchoolYears();
+    await loadSubjects(); await loadMaterials(); await loadEvents();
+    updateStats(); renderSubjectsGrid(); renderMaterialsPanel(); renderCalendar(); renderEventsList();
+  } catch(e) { toast(e.message,'error'); }
 }
 
 // ── SUBJECTS ──
@@ -1142,17 +1304,23 @@ function renderVideosList() {
 function openGradeModal(id = null) {
   document.getElementById('gradeModalTitle').textContent = id ? 'Edit Grade Level' : 'Add Grade Level';
   document.getElementById('gradeId').value = id || '';
+  // Populate school year select
+  const sySel = document.getElementById('gradeSchoolYear');
+  sySel.innerHTML = '<option value="">— None —</option>' +
+    schoolYears.map(y => `<option value="${y.id}">${y.grade} · ${y.year}</option>`).join('');
   if (id) {
     const g = galleryGrades.find(g => g.id === id);
     document.getElementById('gradeName').value = g.name || '';
     document.getElementById('gradeSlug').value = g.slug || '';
     document.getElementById('gradeCoverImage').value = g.cover_image || '';
     document.getElementById('gradeOrder').value = g.order || '';
+    sySel.value = g.school_year_id || '';
   } else {
     document.getElementById('gradeName').value = '';
     document.getElementById('gradeSlug').value = '';
     document.getElementById('gradeCoverImage').value = '';
     document.getElementById('gradeOrder').value = galleryGrades.length + 1;
+    sySel.value = schoolYearDocId || '';
   }
   document.getElementById('gradeModal').classList.add('open');
 }
@@ -1167,6 +1335,7 @@ async function saveGrade() {
     name, slug,
     cover_image: document.getElementById('gradeCoverImage').value.trim() || '',
     order: parseInt(document.getElementById('gradeOrder').value) || galleryGrades.length + 1,
+    school_year_id: document.getElementById('gradeSchoolYear').value || '',
     updated_at: firebase.firestore.FieldValue.serverTimestamp(),
   };
   try {

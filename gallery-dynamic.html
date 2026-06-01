@@ -58,6 +58,17 @@
       const grade = { id: gradeDoc.id, ...gradeDoc.data() };
       document.getElementById('gradeTitleText').textContent = grade.name;
       document.title = `${grade.name} — Xaris Academy`;
+      // Show linked school year if available
+      if (grade.school_year_id) {
+        const sySnap = await db.collection('school_years').doc(grade.school_year_id).get();
+        if (sySnap.exists) {
+          const sy = sySnap.data();
+          const sub = document.createElement('p');
+          sub.style.cssText = 'text-align:center;color:var(--accent);font-size:1.1em;margin-top:0.3em;';
+          sub.textContent = `${sy.year}`;
+          document.getElementById('gradeTitle').appendChild(sub);
+        }
+      }
 
       const body = document.getElementById('galleryBody');
 
