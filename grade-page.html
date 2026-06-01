@@ -54,6 +54,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="firebase-config.js"></script>
     <script src="/script.js"></script>
     <script src="js/lightgallery.min.js"></script>
@@ -75,6 +76,7 @@
           const g = doc.data();
           const div = document.createElement('div');
           div.className = 'box';
+          const pageUrl = g.custom_url || `gallery-dynamic.html?grade=${g.slug}`;
           div.innerHTML = `
             <div class="grade-page-gallery">
               ${g.cover_image
@@ -82,7 +84,7 @@
                 : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9d6a47;font-size:3rem;"><i class="fa-solid fa-images"></i></div>`
               }
             </div>
-            <button class="mira-gallery-btn"><a href="gallery-dynamic.html?grade=${g.slug}">${g.name}</a></button>`;
+            <button class="mira-gallery-btn"><a href="${pageUrl}">${g.name}</a></button>`;
           boxes.appendChild(div);
         });
       } catch(e) {
