@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Migration — Xaris Academy</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    :root { --bg: #ffedd4; --accent: #9d6a47; --accent-dark: #7a4f30; --border: #e8d9cc; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--bg); min-height: 100vh; padding: 2rem; }
+    .container { max-width: 700px; margin: auto; }
+    h1 { color: var(--accent); margin-bottom: 0.3rem; }
+    .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+    .card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(157,106,71,0.1); margin-bottom: 1.2rem; }
+    .card h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--accent-dark); }
+    .card p { font-size: 0.88rem; color: #555; margin-bottom: 1rem; line-height: 1.5; }
+    .warning { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.85rem; color: #92400e; margin-bottom: 1rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.2rem; border-radius: 7px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .log { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.8rem; max-height: 300px; overflow-y: auto; margin-top: 1rem; display: none; }
+    .log.show { display: block; }
+    .log-line { margin-bottom: 3px; }
+    .log-ok { color: #86efac; }
+    .log-skip { color: #fbbf24; }
+    .log-err { color: #fca5a5; }
+    .status { font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
+    a.back { color: var(--accent); font-size: 0.88rem; display: inline-block; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🗄️ Data Migration</h1>
+  <p class="subtitle">One-time tool to migrate static gallery pages into Firestore so they can be managed from the dashboard.</p>
+
+  <div class="warning">
+    ⚠️ Run each migration only once. The tool checks for existing data and skips if already migrated.
+  </div>
+
+  <div class="card">
+    <h2>📚 Kinder 2 — gallery.html</h2>
+    <p>Migrates all Q1–Q4 + Graduation images and captions from the static Kinder 2 gallery into Firestore. After migration, <code>gallery.html</code> will redirect to the dynamic gallery page.</p>
+    <button class="btn btn-primary" id="btnKinder" onclick="migrate('kinder')">Migrate Kinder 2</button>
+    <div class="status" id="statusKinder"></div>
+    <div class="log" id="logKinder"></div>
+  </div>
+
+  <div class="card">
+    <h2>📗 Grade 1 — grade-one.html</h2>
+    <p>Migrates all Q1–Q4 images, sections, and captions from the static Grade 1 gallery into Firestore. After migration, <code>grade-one.html</code> will redirect to the dynamic gallery page.</p>
+    <button class="btn btn-primary" id="btnGradeOne" onclick="migrate('grade1')">Migrate Grade 1</button>
+    <div class="status" id="statusGradeOne"></div>
+    <div class="log" id="logGradeOne"></div>
+  </div>
+
+  <a class="back" href="dashboard.html">← Back to Dashboard</a>
+</div>
+
+<script>
+auth.onAuthStateChanged(user => {
+  if (!user) window.location.href = 'login.html';
+});
+
+// ── KINDER 2 DATA ──
+const KINDER2_DATA = {
+  name: 'Kinder 2', slug: 'kinder-two', order: 1,
+  cover_image: '/assets/Q1i.png',
+  quarters: [
+    {
+      quarter: 1,
+      sections: [
+        {
+          title: 'Quarter 1 Photos',
+          entries: [
+            {type:'caption', value:'During the first quarter, our daughter started her new routine to establish new habits, and skills for her homeschooling journey. She expressed so much desire and excitement in learning freely, happily while at home.'},
+            {type:'image', value:'/assets/Q1i.png'},
+            {type:'image', value:'/assets/Q1j.png'},
+            {type:'image', value:'/assets/Q1b.jpg'},
+            {type:'image', value:'/assets/Q1c.jpg'},
+            {type:'image', value:'/assets/Q1d.jpg'},
+            {type:'caption', value:'Fun time with mommy and daddy as I study!'},
+            {type:'image', value:'/assets/Q1e.jpg'},
+            {type:'image', value:'/assets/Q1f.jpg'},
+            {type:'image', value:'/assets/Q1g.jpg'},
+            {type:'image', value:'/assets/Q1h.jpg'},
+            {type:'caption', value:'Counting and drawing are fun!'},
+            {type:'image', value:'/assets/Q1k.jpg'},
+            {type:'image', value:'/assets/Q1l.jpg'},
+            {type:'image', value:'/assets/Q1m.jpg'},
+            {type:'image', value:'/assets/Q1n.jpg'},
+            {type:'image', value:'/assets/Q1o.jpg'},
+            {type:'caption', value:'New discoveries and learnings are privilege from the Lord.'},
+            {type:'image', value:'/assets/Q1p.jpg'},
+            {type:'image', value:'/assets/Q1q.jpg'},
+            {type:'image', value:'/assets/Q1r.jpg'},
+          ]
+        }
+      ],
+      videos: [
+        {youtube_url:'https://youtube.com/embed/cYTB-BJOwQo', title:'Q1 Video 1', order:1},
+        {youtube_url:'https://youtube.com/embed/T9qEVqM_wJQ', title:'Q1 Video 2', order:2},
+        {youtube_url:'https://youtube.com/embed/c_xiQuQ8FHY', title:'Q1 Video 3', order:3},
+      ]
+    },
+    {
+      quarter: 2,
+      sections: [
+        {
+          title: 'Quarter 2 Photos',
+          entries: [
+            {type:'caption', value:'Our daughter developed her inclination to her favorite activities such as problem solving and discovery time.'},
+            ...['Q2a','Q2b','Q2c','Q2d','Q2e','Q2f','Q2g','Q2h','Q2i','Q2j','Q2k','Q2l','Q2m','Q2n','Q2o','Q2p','Q2q','Q2r','Q2s','Q2t','Q2u','Q2v','Q2w','Q2x','Q2y','Q2z','Q2aa'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+          ]
+        }
+      ],
+      videos: []
+    },
+    {
+      quarter: 3,
+      sections: [
+        {
+          title: 'Quarter 3 Photos',
+          entries: [
+            {type:'caption', value:'With the help of her mom, she developed a love for baking and cookery. She loves baking for her friends and during some special events.'},
+            {type:'image', value:'/assets/Q3x.jpg'},
+            {type:'image', value:'/assets/Q3b.jpg'},
+            {type:'image', value:'/assets/Q3c.jpg'},
+            {type:'image', value:'/assets/Q3d.jpg'},
+            {type:'image', value:'/assets/Q3e.jpg'},
+            {type:'caption', value:"At times, she'll ask her mom to bake and buy ingredients with her to improve her skills. We noticed how she displayed care for others when she thought of baking for other people."},
+            ...['Q3f','Q3g','Q3h','Q3i','Q3j','Q3k','Q3l','Q3m','Q3n'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+            {type:'caption', value:'For the first time, she was able to visit the National Museum with some of her homeschooled friends. New discoveries again!'},
+            ...['Q3o','Q3p','Q3q','Q3r','Q3s','Q3t','Q3u','Q3v','Q3w'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+          ]
+        }
+      ],
+      videos: []
+    },
+    {
+      quarter: 4,
+      sections: [
+        {
+          title: 'Quarter 4 Photos',
+          entries: [
+            {type:'caption', value:'The last quarter was her time to shine. She demonstrated mastery in various skills such as painting, reading, writing, and problem solving.'},
+            ...['Q4a','Q4b','Q4c','Q4d','Q4e','Q4f','Q4g','Q4h','Q4i','Q4j','Q4k','Q4l','Q4m','Q4n','Q4o','Q4p'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+            {type:'caption', value:'Despite much difficulty and challenges, she developed passion in doing such activities especially in painting. She thrives in spontaneously bringing out her idea to work due to the accessibility of materials at home.'},
+            ...['Q4q','Q4r','Q4s','Q4t','Q4u','Q4v','Q4w','Q4x'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+          ]
+        },
+        {
+          title: 'Camping',
+          entries: [
+            {type:'caption', value:'An exciting and wonderful camping before the year ends with the Cavite Tribe!'},
+            ...['campa','campb','campc','campd','campf','campg','camph','campi','campj','campk','campl','campm','campn','campo','campq','campr','camps','campt','campu','campv','campw','campx','campy','campz','campaa','campab','campac','campad','campae','campaf','campag','campah','campai','campaj','campak','campal','campam','campan','campao','campap'].map(f => ({type:'image', value:`/assets/${f}.jpg`})),
+          ]
+        },
+        {
+          title: 'Graduation',
+          entries: [
+            {type:'caption', value:"We couldn't believe it. Our baby girl has made another milestone! After serious, fun, tiring, exciting, and challenging year, we made it by God's grace! To God alone be the glory!"},
+            {type:'image', value:'/assets/graduation/Graduation 1.jpg'},
+            {type:'image', value:'/assets/graduation/Graduation 2.jpg'},
+            {type:'image', value:'/assets/graduation/Graduation 3.jpg'},
+            {type:'image', value:'/assets/graduation/Graduation 4.jpg'},
+            {type:'image', value:'/assets/graduation/Graduation 5.jpg'},
+          ]
+        }
+      ],
+      videos: []
+    }
+  ]
+};
+
+// ── GRADE 1 DATA ──
+const GRADE1_DATA = {
+  name: 'Grade 1', slug: 'grade-one', order: 2,
+  cover_image: '/assets/grade-one/doc miwa 1.jpg',
+  quarters: [
+    {
+      quarter: 1,
+      sections: [
+        {
+          title: 'Books',
+          entries: [
+            {type:'image', value:'/assets/grade-one/book 1.jpg'},
+            {type:'image', value:'/assets/grade-one/book 2.jpg'},
+            {type:'image', value:'/assets/grade-one/book 3.jpg'},
+          ]
+        },
+        {
+          title: 'July Pictures',
+          entries: [
+            {type:'image', value:'/assets/grade-one/doc miwa 1.jpg'},
+            {type:'image', value:'/assets/grade-one/doc miwa 2.jpg'},
+            {type:'image', value:'/assets/grade-one/miwa traveler.jpg'},
+            {type:'image', value:'/assets/grade-one/Costume.jpg'},
+            {type:'image', value:'/assets/grade-one/House project with dad 1.jpg'},
+            {type:'image', value:'/assets/grade-one/House project with dad 2.jpg'},
+            {type:'image', value:"/assets/grade-one/Ate's nailpolish.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 1.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 2.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 3.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 4.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 5.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 6.jpg"},
+            {type:'image', value:"/assets/grade-one/Ate's Study 7.jpg"},
+            {type:'caption', value:'Studying with seriousness yet playfulness.'},
+            ...Array.from({length:8},(_,i)=>({type:'image',value:`/assets/grade-one/arts ${i+1}.jpg`})),
+          ]
+        },
+        {
+          title: 'August Pictures',
+          entries: [
+            {type:'caption', value:'Art exploration and creativity. She improved a lot in her own crafts!'},
+            ...Array.from({length:5},(_,i)=>({type:'image',value:`/assets/grade-one/arts ${i+9}.jpg`})),
+            {type:'caption', value:'Poster-making. Ate Mira enjoyed the tasks so much. She is delighted to complete this project for the first time.'},
+            {type:'image', value:'/assets/grade-one/Grade 1 Chavez Myrrh Abigail.png'},
+            ...Array.from({length:10},(_,i)=>({type:'image',value:`/assets/grade-one/Trip ${i+1}.jpg`})),
+            {type:'caption', value:'Field trip to the historic places and park. She was so excited to see different places and roam around with her friend.'},
+          ]
+        }
+      ],
+      videos: [
+        {youtube_url:'https://youtube.com/embed/ycZUXe8aAbQ', title:'Q1 Video 1', order:1},
+        {youtube_url:'https://www.youtube.com/embed/ttVC_D0AXrg', title:'Q1 Video 2', order:2},
+        {youtube_url:'https://www.youtube.com/embed/2HUlYr8X2uY', title:'Dasma Tribe: Field Trip', order:3},
+      ]
+    },
+    {
+      quarter: 2,
+      sections: [
+        {
+          title: 'Arts',
+          entries: [
+            ...['IMG_20250901_184656','IMG_20250917_125818','IMG_20250929_165930','IMG_20250929_165937','IMG_20251003_213139','IMG_20251003_213203','IMG_20251008_190209','IMG_20251008_193123','IMG_20251020_151133','IMG_20251020_152954','IMG_20251020_153040','IMG_20251020_153312','IMG_20251028_101647','IMG_20251104_123347','IMG_20251104_123359','IMG_20251104_123425','IMG_20251104_123534','IMG_20251104_123557','IMG_20251104_123707','IMG_20251104_123734','IMG_20251104_123724','IMG_20251104_123739','IMG_20251104_123746','IMG_20251104_123806','IMG_20251104_123812','IMG_20251104_123827','IMG_20251104_123838','IMG_20251104_123848','IMG_20251104_123859','IMG_20251104_123905','IMG_20251104_124017','IMG_20251104_124134','IMG_20251104_124206','IMG_20251104_124212','IMG_20251104_124318','IMG_20251104_124325','IMG_20251104_124331','IMG_20251104_125323'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/2nd Qrt Arts/${f}.jpg`})),
+            {type:'caption', value:"Mira's wonderful arts are fascinating. Sometimes, she randomly picks her scissors, paper, pen, and coloring materials to create her masterpiece."},
+            ...['IMG_20251104_125333','IMG_20251104_125422','IMG_20251104_125706','IMG_20251104_125711','IMG_20251104_130642','IMG_20251104_130650'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/2nd Qrt Arts/${f}.jpg`})),
+          ]
+        },
+        {
+          title: 'Lessons',
+          entries: [
+            {type:'caption', value:'Mira has shown great improvement in accomplishing her lessons with joy and delight, though challenged with some of her lessons, she persisted with diligence by God\'s grace.'},
+            ...['IMG_20250912_110141','IMG_20250912_110206','IMG_20250912_110231','IMG_20250917_122136','IMG_20250917_122211','IMG_20250929_155606','IMG_20250929_155625','IMG_20251028_114448','IMG_20251028_114501','IMG_20251028_114507'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/2nd Qrt lessons/${f}.jpg`})),
+          ]
+        },
+        {
+          title: 'Outschooling',
+          entries: [
+            ...['IMG_20250913_151412','IMG_20250913_171830','IMG_20250913_171953','IMG_20250917_170008','IMG_20250917_171244'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/${f}.jpg`})),
+            {type:'caption', value:'Mira got too see various snakes, lizards, etc. during a bazaar at Dasmar Arena.'},
+            ...['IMG_20250917_171312','IMG_20250917_171337','IMG_20250917_171424','IMG_20250917_171438','IMG_20250917_171449','IMG_20250927_162305','IMG_20250927_170144'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/${f}.jpg`})),
+            {type:'caption', value:'3D Robotics is interesting. Mira was also able to create her own name tag through 3D printing as her first project'},
+            ...['IMG_20250927_170226','IMG_20250927_172159','IMG_20250927_172430','IMG_20250927_172436','IMG_20250927_172552','IMG_20250929_151138','IMG_20250929_151455','IMG_20250929_151546','IMG_20250929_163047','IMG_20250929_163200','IMG_20250929_163423','IMG_20250929_163427','IMG_20250929_163500','IMG_20250929_163503','IMG_20250929_163518','IMG_20250929_163557','IMG_20250929_163625','IMG_20251017_202842','IMG_20251024_121125'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/${f}.jpg`})),
+            {type:'caption', value:'Books! Books! Books! While waiting for Daddy at the library, Mira enjoyed her time with Mommy on checking classic books. She also took home thrift C.S. Lewis books!'},
+            ...['IMG_20251024_121143','IMG_20251024_121427','IMG_20251024_125903','IMG_20251024_125912','IMG_20251025_110137','IMG_20251025_110142','IMG_20251025_110145','IMG_20251025_125620','IMG_20251025_125623','IMG_20251025_125632','IMG_20251025_125651','IMG_20251025_125659','IMG_20251025_125711','IMG_20251025_125714','IMG_20251025_150344','IMG_20251025_150349','IMG_20251025_150406','IMG_20251025_150501','IMG_20251025_150511','IMG_20251025_150553','IMG_20251025_150614','IMG_20251025_151618','IMG_20251025_152135','IMG_20251025_152208','IMG_20251025_152225','IMG_20251025_152414','IMG_20251025_152417','IMG_20251025_152514','IMG_20251025_152523','IMG_20251025_153341','IMG_20251025_153349','IMG_20251025_153738','IMG_20251025_153741','IMG_20251025_154117'].map(f=>({type:'image',value:`/assets/grade-one/Xaris 2Qtr 2025/${f}.jpg`})),
+          ]
+        }
+      ],
+      videos: [
+        {youtube_url:'https://www.youtube.com/embed/ttVC_D0AXrg', title:'Q2 Video', order:1},
+      ]
+    },
+    {
+      quarter: 3,
+      sections: [
+        {
+          title: 'Arts and Crafts',
+          entries: [
+            ...Array.from({length:26},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/arts and craft 3rdQRT/art${i+1}.jpg`})),
+            {type:'caption', value:'Arts and crafts were not just assignments to complete but things she loves to do to express her creativity'},
+          ]
+        },
+        {
+          title: 'Karate Skill',
+          entries: [
+            ...Array.from({length:5},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/Skills 3rdQRT/skill${i+1}.jpg`})),
+            {type:'caption', value:'Mira enjoyed learning her Karate skill.'},
+          ]
+        },
+        {
+          title: 'Outschooling Activities',
+          entries: [
+            ...Array.from({length:17},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/outschooling 3rdQRT/Outschool${i+1}.jpg`})),
+            {type:'caption', value:'Mira got the chance to enjoy her holiday vacation at Cebu and Leyte.'},
+            ...Array.from({length:14},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/outschooling 3rdQRT/Outschool${i+18}.jpg`})),
+            {type:'caption', value:'At Cebu, we visited Ocean park and she was delighted to see different kind of animals.'},
+            ...Array.from({length:17},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/outschooling 3rdQRT/Outschool${i+32}.jpg`})),
+            {type:'caption', value:'At Leyte, she spent time at the beach. It was a fun experience, something that is etched in her memory.'},
+            ...Array.from({length:16},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 3qtr 2026/outschooling 3rdQRT/Outschool${i+49}.jpg`})),
+          ]
+        }
+      ],
+      videos: []
+    },
+    {
+      quarter: 4,
+      sections: [
+        {
+          title: 'Arts and Crafts',
+          entries: [
+            ...Array.from({length:7},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 4qtr 2026/4th qrt. arts and crafts/4Qskills${i+1}.jpg`})),
+            {type:'caption', value:'Her drawing skills has grown a lot. Doing her own kind of dolls'},
+          ]
+        },
+        {
+          title: 'Household Skills',
+          entries: [
+            ...Array.from({length:21},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 4qtr 2026/skills 4th Qrt/${i+1}.jpg`})),
+            {type:'caption', value:'Mira enjoyed cooking and helping her mom prepare for our daily food. These pictures show her delight in doing such!'},
+          ]
+        },
+        {
+          title: 'Outschooling',
+          entries: [
+            ...Array.from({length:21},(_,i)=>({type:'image',value:`/assets/grade-one/Xaris 4qtr 2026/outschooling-4th-qtr/${i+1}.jpg`})),
+            {type:'caption', value:'Reading, camping, swimming and building bonding outside homeschool to close the year! We have also joined a family camp with different churches. It was edifying and Mira found new friends.'},
+          ]
+        }
+      ],
+      videos: []
+    }
+  ]
+};
+
+// ── MIGRATION ENGINE ──
+async function migrate(key) {
+  const data   = key === 'kinder' ? KINDER2_DATA : GRADE1_DATA;
+  const btnId  = key === 'kinder' ? 'btnKinder'  : 'btnGradeOne';
+  const logId  = key === 'kinder' ? 'logKinder'  : 'logGradeOne';
+  const statId = key === 'kinder' ? 'statusKinder': 'statusGradeOne';
+
+  const btn    = document.getElementById(btnId);
+  const logEl  = document.getElementById(logId);
+  const statEl = document.getElementById(statId);
+
+  btn.disabled = true;
+  logEl.innerHTML = '';
+  logEl.classList.add('show');
+  statEl.textContent = 'Running…';
+
+  function log(msg, cls = '') {
+    const d = document.createElement('div');
+    d.className = 'log-line ' + cls;
+    d.textContent = msg;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  try {
+    // 1. Check / create gallery_grade
+    log(`Checking gallery grade: ${data.name}…`);
+    const existing = await db.collection('gallery_grades').where('slug','==',data.slug).limit(1).get();
+    let gradeId;
+    if (!existing.empty) {
+      gradeId = existing.docs[0].id;
+      log(`  → Grade already exists (${gradeId}), reusing.`, 'log-skip');
+    } else {
+      const ref = await db.collection('gallery_grades').add({
+        name: data.name, slug: data.slug, order: data.order,
+        cover_image: data.cover_image, custom_url: '', school_year_id: '',
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      gradeId = ref.id;
+      log(`  → Created grade: ${gradeId}`, 'log-ok');
+    }
+
+    // 2. Check if sections already exist
+    const secCheck = await db.collection('gallery_sections').where('grade_id','==',gradeId).limit(1).get();
+    if (!secCheck.empty) {
+      log(`Sections already exist for this grade. Skipping to avoid duplicates.`, 'log-skip');
+      log(`Migration skipped — already done. To re-run, delete the existing sections first.`, 'log-skip');
+      statEl.textContent = '⚠️ Already migrated — skipped.';
+      statEl.style.color = '#92400e';
+      btn.disabled = false;
+      return;
+    }
+
+    // 3. Seed quarters
+    for (const qData of data.quarters) {
+      log(`\nQuarter ${qData.quarter}:`);
+
+      // Sections
+      let sectionOrder = 1;
+      for (const sec of qData.sections) {
+        log(`  Section: "${sec.title}" (${sec.entries.length} entries)…`);
+        const secRef = await db.collection('gallery_sections').add({
+          grade_id: gradeId, quarter: qData.quarter,
+          title: sec.title, order: sectionOrder++,
+          created_at: firebase.firestore.FieldValue.serverTimestamp(),
+          updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Entries in batches of 400 (Firestore batch limit)
+        const entries = sec.entries;
+        for (let i = 0; i < entries.length; i += 400) {
+          const batch = db.batch();
+          entries.slice(i, i + 400).forEach((e, idx) => {
+            const eRef = db.collection('gallery_entries').doc();
+            batch.set(eRef, {
+              section_id: secRef.id, grade_id: gradeId, quarter: qData.quarter,
+              type: e.type, value: e.value, order: i + idx + 1,
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+          });
+          await batch.commit();
+        }
+        log(`    ✓ ${sec.entries.length} entries written`, 'log-ok');
+      }
+
+      // Videos
+      for (let i = 0; i < qData.videos.length; i++) {
+        const v = qData.videos[i];
+        await db.collection('gallery_videos').add({
+          grade_id: gradeId, quarter: qData.quarter,
+          youtube_url: v.youtube_url, title: v.title, order: v.order,
+          created_at: firebase.firestore.FieldValue.serverTimestamp(),
+          updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+      if (qData.videos.length) log(`  ✓ ${qData.videos.length} video(s) written`, 'log-ok');
+    }
+
+    log(`\n✅ Migration complete for ${data.name}!`, 'log-ok');
+    statEl.textContent = `✅ Done! ${data.name} is now in Firestore.`;
+    statEl.style.color = '#16a34a';
+
+  } catch(e) {
+    log(`❌ Error: ${e.message}`, 'log-err');
+    statEl.textContent = '❌ Failed: ' + e.message;
+    statEl.style.color = '#dc2626';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
