@@ -18,11 +18,11 @@ html {
 }
 body {
     z-index: 2;
-    background-color: white;
+    background-color: transparent;
 }
 
 html {
-    background-color: white;
+    background-color: #ffedd4;
 }
 
 .background {
